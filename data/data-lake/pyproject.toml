@@ -1,0 +1,19 @@
+[project]
+name = "maintix-data-lake"
+version = "0.1.0"
+description = "Maintix Data Lake implementation with Bronze/Silver/Gold zones, ETL, feature store, metadata, catalog, and retention"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.0.0",
+    "pyarrow>=10.0.0",
+    "python-dateutil>=2.8.0"
+]
+
+[build-system]
+requires = ["setuptools>=67.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-q"
+testpaths = ["tests"]

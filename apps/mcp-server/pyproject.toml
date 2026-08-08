@@ -1,0 +1,16 @@
+[project]
+name = "maintix-mcp-server"
+version = "0.1.0"
+description = "Maintix MCP server scaffold for industrial copilot agents"
+dependencies = [
+    "fastapi>=0.105.0",
+    "uvicorn[standard]>=0.23.0",
+    "pydantic>=2.9.0",
+    "python-dotenv>=1.0.0",
+    "setuptools>=67.0.0",
+    "wheel>=0.40.0"
+]
+
+[build-system]
+requires = ["setuptools>=67.0.0", "wheel"]
+build-backend = "setuptools.build_meta"

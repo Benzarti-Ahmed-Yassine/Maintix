@@ -1,0 +1,1 @@
+"""Maintix MCP server package."""

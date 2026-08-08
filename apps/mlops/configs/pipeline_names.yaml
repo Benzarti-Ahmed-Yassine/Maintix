@@ -1,0 +1,9 @@
+# MLOps pipeline naming conventions
+
+training_pipeline: training_pipeline
+evaluation_pipeline: evaluation_pipeline
+validation_pipeline: validation_pipeline
+deployment_pipeline: deployment_pipeline
+monitoring_pipeline: monitoring_pipeline
+drift_pipeline: drift_pipeline
+retraining_pipeline: retraining_pipeline

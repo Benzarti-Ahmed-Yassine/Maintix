@@ -1,0 +1,8 @@
+node_modules
+dist
+build
+.next
+.git
+.gitignore
+.pytest_cache
+__pycache__

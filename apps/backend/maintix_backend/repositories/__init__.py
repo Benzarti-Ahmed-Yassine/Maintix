@@ -1,0 +1,4 @@
+from maintix_backend.repositories.asset_repository import AssetRepository
+from maintix_backend.repositories.maintenance_repository import MaintenanceRepository
+from maintix_backend.repositories.production_repository import ProductionRepository
+from maintix_backend.repositories.user_repository import UserRepository

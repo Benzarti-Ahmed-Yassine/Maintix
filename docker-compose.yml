@@ -1,0 +1,248 @@
+networks:
+  maintix_frontend:
+    driver: bridge
+    name: maintix_frontend
+  maintix_backend:
+    driver: bridge
+    name: maintix_backend
+  maintix_observability:
+    driver: bridge
+    name: maintix_observability
+
+volumes:
+  postgres_data:
+  timescaledb_data:
+  redis_data:
+  mosquitto_data:
+  grafana_data:
+  prometheus_data:
+  loki_data:
+
+services:
+  # ── FRONTEND SERVICE ────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4173:4173"
+    networks:
+      - maintix_frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4173"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── BACKEND CORE SERVICE ───────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://maintix:maintix@timescaledb:5432/maintix
+      - REDIS_URL=redis://redis:6379/0
+      - MQTT_BROKER=mqtt://mosquitto:1883
+    ports:
+      - "8000:8000"
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - maintix_frontend
+      - maintix_backend
+      - maintix_observability
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+
+  # ── OLLAMA LLM SERVICE ──────────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    networks:
+      - maintix_backend
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── RAG SERVER ─────────────────────────────────────────────────────────────
+  rag-server:
+    build:
+      context: ./apps/rag-server
+      dockerfile: Dockerfile
+    ports:
+      - "8100:8100"
+    depends_on:
+      backend:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    networks:
+      - maintix_backend
+      - maintix_observability
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ── MCP AGENT SERVER ───────────────────────────────────────────────────────
+  mcp-server:
+    build:
+      context: ./apps/mcp-server
+      dockerfile: Dockerfile
+    ports:
+      - "8200:8200"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - maintix_backend
+      - maintix_observability
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8200/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ── MQTT BROKER (MOSQUITTO) ────────────────────────────────────────────────
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - ./infrastructure/mosquitto/config:/mosquitto/config
+    networks:
+      - maintix_backend
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_pub -h localhost -t health/test -m ping || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # ── POSTGRESQL ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: maintix
+      POSTGRES_PASSWORD: maintix
+      POSTGRES_DB: maintix
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - maintix_backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U maintix"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── TIMESCALEDB ────────────────────────────────────────────────────────────
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_USER: maintix
+      POSTGRES_PASSWORD: maintix
+      POSTGRES_DB: maintix
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    networks:
+      - maintix_backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U maintix"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── REDIS CACHE ────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - maintix_backend
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── PROMETHEUS MONITORING ──────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - prometheus_data:/prometheus
+      - ./infrastructure/prometheus:/etc/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - maintix_observability
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/ready"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
+  # ── GRAFANA DASHBOARDS ────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+    networks:
+      - maintix_observability
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
+  # ── LOKI LOG AGGREGATOR ───────────────────────────────────────────────────
+  loki:
+    image: grafana/loki:2.9.1
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+      - ./infrastructure/loki:/etc/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - maintix_observability
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3100/ready"]
+      interval: 20s
+      timeout: 10s
+      retries: 3

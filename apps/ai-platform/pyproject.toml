@@ -1,0 +1,17 @@
+[project]
+name = "maintix-ai-platform"
+version = "0.1.0"
+description = "Maintix AI platform architecture scaffold"
+dependencies = [
+    "pydantic>=2.9.0",
+    "fastapi>=0.105.0",
+    "httpx>=0.27.0",
+    "redis>=5.0.0",
+    "python-dotenv>=1.0.0",
+    "setuptools>=67.0.0",
+    "wheel>=0.40.0"
+]
+
+[build-system]
+requires = ["setuptools>=67.0.0", "wheel"]
+build-backend = "setuptools.build_meta"

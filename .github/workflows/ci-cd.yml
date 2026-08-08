@@ -1,0 +1,189 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch: {}
+
+jobs:
+  frontend:
+    name: Frontend Build & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install frontend dependencies
+        run: npm ci --prefix apps/frontend
+      - name: Run frontend lint
+        run: npm run lint --prefix apps/frontend
+      - name: Run frontend tests
+        run: npm run test:coverage --prefix apps/frontend
+      - name: Build frontend
+        run: npm run build --prefix apps/frontend
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: apps/frontend/dist
+
+  python-tests:
+    name: Python Tests, Formatting & Coverage
+    runs-on: ubuntu-latest
+    needs: frontend
+    strategy:
+      matrix:
+        python-version: ['3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Upgrade pip and install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e apps/backend -e apps/ai-platform -e apps/mlops -e apps/rag-server -e apps/mcp-server
+          python -m pip install pytest coverage black ruff pip-audit
+      - name: Set PYTHONPATH for package imports
+        run: echo "PYTHONPATH=$PYTHONPATH:apps/backend:apps/ai-platform:apps/rag-server:apps/mcp-server:apps/integration" >> $GITHUB_ENV
+      - name: Run Python lint
+        run: |
+          python -m ruff check apps/backend apps/ai-platform apps/mlops apps/rag-server apps/mcp-server apps/integration data/data-lake
+      - name: Run Python format check
+        run: python -m black --check apps/backend apps/ai-platform apps/mlops apps/rag-server apps/mcp-server apps/integration data/data-lake
+      - name: Run Python tests with coverage
+        run: |
+          coverage run -m pytest apps/ai-platform/ai_platform/tests apps/backend/tests apps/mlops/tests apps/rag-server/rag_server/tests apps/mcp-server/maintix_mcp/tests apps/integration/tests data/data-lake/tests tests/architecture/load
+          coverage xml -o coverage.xml
+          coverage html -d htmlcov
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            htmlcov
+
+  docker:
+    name: Docker Build Validation
+    runs-on: ubuntu-latest
+    needs: python-tests
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build MLops Docker image
+        run: |
+          docker build --file apps/mlops/Dockerfile --tag maintix-mlops:ci apps/mlops
+      - name: Save Docker image artifact
+        run: |
+          mkdir -p artifacts
+          docker save maintix-mlops:ci -o artifacts/maintix-mlops-ci.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: artifacts/maintix-mlops-ci.tar
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: python-tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies for security scan
+        run: |
+          npm ci --prefix apps/frontend
+          python -m pip install --upgrade pip
+          python -m pip install pip-audit
+      - name: Run npm audit for frontend
+        run: npm audit --prefix apps/frontend --audit-level=high
+      - name: Run pip audit for Python dependencies
+        run: python -m pip_audit --format json > pip-audit.json
+      - name: Upload security scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-results
+          path: pip-audit.json
+
+  release:
+    name: Draft Release and Artifacts
+    runs-on: ubuntu-latest
+    needs:
+      - frontend
+      - python-tests
+      - docker
+      - security
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+      - name: Download docker artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+      - name: Create draft release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            Automated draft release for tag ${{ github.ref_name }}.
+            CI workflow run: ${{ github.run_url }}
+          draft: true
+          prerelease: false
+      - name: Zip frontend artifact
+        run: zip -r frontend-dist.zip apps/frontend/dist
+      - name: Upload frontend release asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: frontend-dist.zip
+          asset_name: frontend-dist.zip
+          asset_content_type: application/zip
+      - name: Zip coverage report
+        run: zip -r coverage-report.zip coverage.xml htmlcov
+      - name: Upload coverage release asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: coverage-report.zip
+          asset_name: coverage-report.zip
+          asset_content_type: application/zip
+      - name: Upload Docker image release asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/maintix-mlops-ci.tar
+          asset_name: maintix-mlops-ci.tar
+          asset_content_type: application/x-tar
