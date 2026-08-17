@@ -166,3 +166,27 @@ export interface ProductionLine {
   downtimeHours: number;
   activeProduct?: string;
 }
+
+export type ActionCategory =
+  | 'DIAGNOSTIC'
+  | 'MAINTENANCE'
+  | 'PRODUCTION'
+  | 'STRATEGY'
+  | 'COPILOT'
+  | 'EXPORT'
+  | 'SECURITY'
+  | 'SYSTEM';
+
+export interface HistoryAction {
+  id: string;
+  timestamp: string;
+  role: RoleType;
+  userName: string;
+  action: string;
+  category: ActionCategory;
+  details: string;
+  machineCode?: string;
+  status?: 'SUCCESS' | 'WARNING' | 'INFO' | 'CRITICAL';
+  metadata?: Record<string, any>;
+}
+

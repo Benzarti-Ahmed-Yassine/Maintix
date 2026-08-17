@@ -20,6 +20,7 @@ import { WorkOrdersPage } from './pages/technician/WorkOrdersPage.js';
 import { AlertsPage } from './pages/technician/AlertsPage.js';
 import { TechnicianProceduresPage } from './pages/technician/TechnicianProceduresPage.js';
 import { TechnicianSparePartsPage } from './pages/technician/TechnicianSparePartsPage.js';
+import { TechnicianHistoryPage } from './pages/technician/TechnicianHistoryPage.js';
 
 // Maintenance Manager Pages
 import { MaintenanceOverview } from './pages/maintenance/MaintenanceOverview.js';
@@ -27,6 +28,7 @@ import { MaintenanceSensorsPage } from './pages/maintenance/MaintenanceSensorsPa
 import { RiskAnalysisPage } from './pages/maintenance/RiskAnalysisPage.js';
 import { MaintenancePlansPage } from './pages/maintenance/MaintenancePlansPage.js';
 import { TechniciansPage } from './pages/maintenance/TechniciansPage.js';
+import { MaintenanceHistoryPage } from './pages/maintenance/MaintenanceHistoryPage.js';
 
 // Production Manager Pages
 import { ProductionOverview } from './pages/production/ProductionOverview.js';
@@ -36,6 +38,7 @@ import { ProductionPerformancePage } from './pages/production/ProductionPerforma
 import { ProductionDowntimePage } from './pages/production/ProductionDowntimePage.js';
 import { ProductionQualityPage } from './pages/production/ProductionQualityPage.js';
 import { ProductionOrdersPage } from './pages/production/ProductionOrdersPage.js';
+import { ProductionHistoryPage } from './pages/production/ProductionHistoryPage.js';
 
 // Industrial Director Pages
 import { DirectorOverview } from './pages/director/DirectorOverview.js';
@@ -43,6 +46,8 @@ import { DirectorKpisPage } from './pages/director/DirectorKpisPage.js';
 import { FinancialRoiPage } from './pages/director/FinancialRoiPage.js';
 import { DirectorOperationsPage } from './pages/director/DirectorOperationsPage.js';
 import { DirectorSystemsPage } from './pages/director/DirectorSystemsPage.js';
+import { DirectorHistoryPage } from './pages/director/DirectorHistoryPage.js';
+import { DirectorCsvExportPage } from './pages/director/DirectorCsvExportPage.js';
 
 // Admin Pages
 import { AdminControlPanel } from './pages/admin/AdminControlPanel.js';
@@ -210,6 +215,7 @@ export const App: React.FC = () => {
             <Route path="/technician/work-orders" element={<WorkOrdersPage />} />
             <Route path="/technician/procedures" element={<TechnicianProceduresPage />} />
             <Route path="/technician/spare-parts" element={<TechnicianSparePartsPage />} />
+            <Route path="/technician/history" element={<TechnicianHistoryPage />} />
             <Route path="/technician/ai" element={<TechnicianOverview />} />
 
             {/* Maintenance Manager Routes */}
@@ -223,6 +229,7 @@ export const App: React.FC = () => {
             <Route path="/maintenance/work-orders" element={<WorkOrdersPage />} />
             <Route path="/maintenance/technicians" element={<TechniciansPage />} />
             <Route path="/maintenance/spare-parts" element={<TechnicianSparePartsPage />} />
+            <Route path="/maintenance/history" element={<MaintenanceHistoryPage />} />
             <Route path="/maintenance/ai" element={<MaintenanceOverview />} />
 
             {/* Production Manager Routes */}
@@ -234,6 +241,7 @@ export const App: React.FC = () => {
             <Route path="/production/downtime" element={<ProductionDowntimePage />} />
             <Route path="/production/quality" element={<ProductionQualityPage />} />
             <Route path="/production/orders" element={<ProductionOrdersPage />} />
+            <Route path="/production/history" element={<ProductionHistoryPage />} />
             <Route path="/production/ai" element={<ProductionOverview />} />
 
             {/* Industrial Director Routes */}
@@ -243,6 +251,8 @@ export const App: React.FC = () => {
             <Route path="/director/risk" element={<RiskAnalysisPage />} />
             <Route path="/director/operations" element={<DirectorOperationsPage />} />
             <Route path="/director/systems" element={<DirectorSystemsPage />} />
+            <Route path="/director/exports" element={<DirectorCsvExportPage />} />
+            <Route path="/director/history" element={<DirectorHistoryPage />} />
             <Route path="/director/ai-insights" element={<DirectorOverview />} />
             <Route path="/director/ai" element={<DirectorOverview />} />
 

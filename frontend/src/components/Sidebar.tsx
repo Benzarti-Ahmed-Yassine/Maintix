@@ -24,7 +24,8 @@ import {
   Sliders,
   Sparkles,
   LogOut,
-  RefreshCw
+  RefreshCw,
+  History
 } from 'lucide-react';
 import { useAppStore } from '../store/useStore.js';
 
@@ -52,6 +53,7 @@ export const Sidebar: React.FC = () => {
     { to: '/technician/work-orders', label: 'Ordres de Travail', icon: <Wrench size={18} /> },
     { to: '/technician/procedures', label: 'Procédures SOP', icon: <FileText size={18} /> },
     { to: '/technician/spare-parts', label: 'Pièces de Rechange', icon: <Package size={18} /> },
+    { to: '/technician/history', label: 'Journal des Actions', icon: <History size={18} /> },
     { to: '/technician/ai', label: 'Copilote IA RAG', icon: <Bot size={18} /> },
   ];
 
@@ -63,6 +65,7 @@ export const Sidebar: React.FC = () => {
     { to: '/maintenance/plans', label: 'Plans de Maintenance', icon: <Calendar size={18} /> },
     { to: '/maintenance/technicians', label: 'Équipe Techniciens', icon: <Users size={18} /> },
     { to: '/maintenance/spare-parts', label: 'Inventaire Pièces', icon: <Package size={18} /> },
+    { to: '/maintenance/history', label: 'Journal des Décisions', icon: <History size={18} /> },
     { to: '/maintenance/ai', label: 'Copilote IA RAG', icon: <Bot size={18} /> },
   ];
 
@@ -74,6 +77,7 @@ export const Sidebar: React.FC = () => {
     { to: '/production/downtime', label: 'Arrêts & Pertes', icon: <Clock size={18} /> },
     { to: '/production/quality', label: 'Contrôle Qualité', icon: <CheckCircle2 size={18} /> },
     { to: '/production/orders', label: 'Ordres MES', icon: <FileText size={18} /> },
+    { to: '/production/history', label: 'Journal des Opérations', icon: <History size={18} /> },
     { to: '/production/ai', label: 'Copilote IA RAG', icon: <Bot size={18} /> },
   ];
 
@@ -83,9 +87,12 @@ export const Sidebar: React.FC = () => {
     { to: '/director/analytics', label: 'Impact Financier & ROI', icon: <TrendingUp size={18} /> },
     { to: '/director/operations', label: 'Opérations Usine', icon: <Layers size={18} /> },
     { to: '/director/systems', label: 'Architecture OT/IT', icon: <Share2 size={18} /> },
+    { to: '/director/exports', label: 'Exports CSV Management', icon: <FileSpreadsheet size={18} /> },
+    { to: '/director/history', label: 'Journal des Décisions', icon: <History size={18} /> },
     { to: '/director/ai-insights', label: 'Synthèses IA Direction', icon: <Sparkles size={18} /> },
     { to: '/director/ai', label: 'Copilote IA RAG', icon: <Bot size={18} /> },
   ];
+
 
   const adminLinks = [
     { to: '/admin', label: 'Panneau de Contrôle', icon: <Settings size={18} /> },
