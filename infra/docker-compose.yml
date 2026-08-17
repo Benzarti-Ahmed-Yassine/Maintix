@@ -1,0 +1,114 @@
+version: '3.8'
+
+# ══════════════════════════════════════════════════════════════
+# MAINTIX — Stack Docker Complète
+# Plateforme IA Industrielle — Usine Textile FACTORY-TN-01
+# ══════════════════════════════════════════════════════════════
+
+services:
+
+  # ── Base de données PostgreSQL ─────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: maintix-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-maintix}
+      POSTGRES_USER: ${POSTGRES_USER:-maintix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Maint1x_S3cure_2024!}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - maintix-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-maintix} -d ${POSTGRES_DB:-maintix}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ── Broker MQTT (Eclipse Mosquitto) ────────────────────────
+  mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: maintix-mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mqtt_data:/mosquitto/data
+    networks:
+      - maintix-net
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_pub -h localhost -t health -m ping -q 0 2>/dev/null && echo ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend Node.js / Express / Prisma ─────────────────────
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: maintix-backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-maintix}:${POSTGRES_PASSWORD:-Maint1x_S3cure_2024!}@postgres:5432/${POSTGRES_DB:-maintix}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-maintix-jwt-secret-change-me}
+      PORT: 4000
+      NODE_ENV: production
+      MQTT_URL: mqtt://mqtt:1883
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+    networks:
+      - maintix-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health | grep -q UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── Frontend React / Vite / Nginx ──────────────────────────
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_BACKEND_URL: http://localhost:4000
+    container_name: maintix-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - maintix-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 | grep -q MAINTIX || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+# ── Volumes persistants ────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  mqtt_data:
+    driver: local
+
+# ── Réseau interne ─────────────────────────────────────────────
+networks:
+  maintix-net:
+    driver: bridge
+    name: maintix-network

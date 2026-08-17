@@ -1,0 +1,5 @@
+Policy,Avg_Total_Cost_USD,Avg_Reward,Avg_Breakdowns,Avg_Downtime_Days,Cost_Reduction_vs_Reactive_Pct
+No_Maintenance,19000.0,-16643.2,0.76,2.28,5.0
+Reactive_Only,20000.0,-17708.0,0.8,2.4,0.0
+Fixed_Interval_45d,6000.0,12044.8,0.0,0.0,70.0
+MAINTIX_Safe_RL_Policy,3624.0,20219.4,0.0,0.0,81.9

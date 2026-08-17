@@ -3,16 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
-.pytest_cache/*
 .mypy_cache/
-.pytype/
 .python-version
 .env
 .venv/
 venv/
 env/
 ENV/
-pip-wheel-metadata/
 dist/
 build/
 *.egg-info/
@@ -23,8 +20,6 @@ build/
 *.log
 .coverage
 mlruns/
-*.mo
-*.pot
 
 # Node
 node_modules/
@@ -33,7 +28,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 package-lock.json
-npm-debug.log*
 
 # Editor
 .vscode/
@@ -46,7 +40,11 @@ Thumbs.db
 # OS
 desktop.ini
 
-# Docker
+# Frontend build output - keep dist tracked for reference but exclude node_modules
+frontend/node_modules/
+backend/node_modules/
 
 # Additional local files
 *.env*
+.env.local
+.env.production.local

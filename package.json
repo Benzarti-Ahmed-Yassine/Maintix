@@ -1,0 +1,22 @@
+{
+  "name": "maintix-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI Decision Intelligence Extension for Industrial Operations",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "simulator"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\" \"npm run dev --workspace=simulator\"",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:simulator": "npm run dev --workspace=simulator",
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
+    "test": "npm run test --workspace=backend && npm run test --workspace=frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

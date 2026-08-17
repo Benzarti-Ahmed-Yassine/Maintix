@@ -1,0 +1,2 @@
+dataset,n_trajectories,n_rows,rul_min,rul_max,rul_mean,rul_std,monotonicity_violations,leakage_risk,rul_method,status
+maintix_synthetic,10,21600,0.0,89.0,32.78666666666667,25.88789859511589,0,NONE,synthetic_precomputed,VALID

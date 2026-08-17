@@ -1,0 +1,232 @@
+{
+  "directed": true,
+  "multigraph": true,
+  "graph": {},
+  "nodes": [
+    {
+      "name": "Weaving Line 4 Monastir",
+      "target_oee": 85.0,
+      "node_type": "ProductionLine",
+      "id": "Line-04"
+    },
+    {
+      "name": "Weaving Line 3 Monastir",
+      "target_oee": 88.0,
+      "node_type": "ProductionLine",
+      "id": "Line-03"
+    },
+    {
+      "name": "Picanol OptiMax-i 1250 Air-Jet Loom A12",
+      "criticality": "HIGH",
+      "status": "WARNING",
+      "node_type": "Machine",
+      "id": "TX-1250-A"
+    },
+    {
+      "name": "Picanol GamMax Weaving Loom 01",
+      "criticality": "CRITICAL",
+      "status": "CRITICAL",
+      "node_type": "Machine",
+      "id": "PCL-GMX-001"
+    },
+    {
+      "name": "Main Shaft Bearing (Left)",
+      "type": "Ball Bearing",
+      "node_type": "Component",
+      "id": "COMP-BRG-LEFT"
+    },
+    {
+      "name": "7.5 kW Main Drive Motor",
+      "type": "AC Induction Servo",
+      "node_type": "Component",
+      "id": "COMP-MOTOR-01"
+    },
+    {
+      "name": "Planetary Gearbox Stage 1",
+      "type": "Gearbox",
+      "node_type": "Component",
+      "id": "COMP-GBX-01"
+    },
+    {
+      "name": "Triaxial Accelerometer (Drive Side)",
+      "unit": "mm/s RMS",
+      "node_type": "Sensor",
+      "id": "SENS-VIB-03"
+    },
+    {
+      "name": "PT100 RTD Bearing Thermal Probe",
+      "unit": "\u00b0C",
+      "node_type": "Sensor",
+      "id": "SENS-TEMP-01"
+    },
+    {
+      "name": "Hall Effect Current Sensor",
+      "unit": "A",
+      "node_type": "Sensor",
+      "id": "SENS-CURR-01"
+    },
+    {
+      "title": "High Vibration Velocity (11.2 mm/s RMS)",
+      "severity": "CRITICAL",
+      "node_type": "Anomaly",
+      "id": "ANOM-VIB-SURGE"
+    },
+    {
+      "title": "Stage 3 Bearing Outer-Race Spalling",
+      "iso_standard": "ISO 10816-3 Zone D",
+      "node_type": "Failure",
+      "id": "FAIL-BRG-WEAR"
+    },
+    {
+      "part_number": "SP-BRG-6208-SKF",
+      "name": "SKF 6208-2RS Ball Bearing",
+      "stock_qty": 14,
+      "location": "Shelf B-12",
+      "node_type": "SparePart",
+      "id": "PART-SKF-6208"
+    },
+    {
+      "part_number": "SP-LUB-LGMT3",
+      "name": "SKF LGMT 3 High-Temp Grease (1kg)",
+      "stock_qty": 8,
+      "location": "Chemical Cabinet C-02",
+      "node_type": "SparePart",
+      "id": "PART-LGMT3-GREASE"
+    },
+    {
+      "title": "Loom Main Shaft Bearing Extraction & Replacement Protocol",
+      "standard_hours": 2.0,
+      "node_type": "Procedure",
+      "id": "PROC-BRG-REPLACE"
+    },
+    {
+      "title": "Picanol OptiMax-i Technical Service Manual",
+      "doc_id": "DOC-PICANOL-1250",
+      "node_type": "Document",
+      "id": "DOC-PICANOL-SVC"
+    },
+    {
+      "name": "Karim Ben Ali",
+      "specialty": "Mechanical Alignment & Vibration Specialist",
+      "node_type": "Technician",
+      "id": "TECH-KARIM"
+    },
+    {
+      "title": "Urgent Left Bearing Replacement",
+      "status": "OPEN",
+      "priority": "HIGH",
+      "node_type": "WorkOrder",
+      "id": "WO-2024-0891"
+    }
+  ],
+  "edges": [
+    {
+      "relation_type": "BELONGS_TO",
+      "source": "TX-1250-A",
+      "target": "Line-04",
+      "key": "BELONGS_TO"
+    },
+    {
+      "relation_type": "HAS_COMPONENT",
+      "source": "TX-1250-A",
+      "target": "COMP-BRG-LEFT",
+      "key": "HAS_COMPONENT"
+    },
+    {
+      "relation_type": "HAS_COMPONENT",
+      "source": "TX-1250-A",
+      "target": "COMP-MOTOR-01",
+      "key": "HAS_COMPONENT"
+    },
+    {
+      "relation_type": "HAS_DOCUMENT",
+      "source": "TX-1250-A",
+      "target": "DOC-PICANOL-SVC",
+      "key": "HAS_DOCUMENT"
+    },
+    {
+      "relation_type": "BELONGS_TO",
+      "source": "PCL-GMX-001",
+      "target": "Line-04",
+      "key": "BELONGS_TO"
+    },
+    {
+      "relation_type": "HAS_COMPONENT",
+      "source": "PCL-GMX-001",
+      "target": "COMP-BRG-LEFT",
+      "key": "HAS_COMPONENT"
+    },
+    {
+      "relation_type": "HAS_COMPONENT",
+      "source": "PCL-GMX-001",
+      "target": "COMP-GBX-01",
+      "key": "HAS_COMPONENT"
+    },
+    {
+      "relation_type": "HAS_SENSOR",
+      "source": "COMP-BRG-LEFT",
+      "target": "SENS-VIB-03",
+      "key": "HAS_SENSOR"
+    },
+    {
+      "relation_type": "HAS_SENSOR",
+      "source": "COMP-BRG-LEFT",
+      "target": "SENS-TEMP-01",
+      "key": "HAS_SENSOR"
+    },
+    {
+      "relation_type": "HAS_SENSOR",
+      "source": "COMP-MOTOR-01",
+      "target": "SENS-CURR-01",
+      "key": "HAS_SENSOR"
+    },
+    {
+      "relation_type": "INDICATES",
+      "source": "SENS-VIB-03",
+      "target": "ANOM-VIB-SURGE",
+      "key": "INDICATES"
+    },
+    {
+      "relation_type": "SUGGESTS",
+      "source": "ANOM-VIB-SURGE",
+      "target": "FAIL-BRG-WEAR",
+      "key": "SUGGESTS"
+    },
+    {
+      "relation_type": "REQUIRES",
+      "source": "FAIL-BRG-WEAR",
+      "target": "PROC-BRG-REPLACE",
+      "key": "REQUIRES"
+    },
+    {
+      "relation_type": "USES",
+      "source": "PROC-BRG-REPLACE",
+      "target": "PART-SKF-6208",
+      "key": "USES"
+    },
+    {
+      "relation_type": "USES",
+      "source": "PROC-BRG-REPLACE",
+      "target": "PART-LGMT3-GREASE",
+      "key": "USES"
+    },
+    {
+      "relation_type": "PERFORMED",
+      "source": "TECH-KARIM",
+      "target": "WO-2024-0891",
+      "key": "PERFORMED"
+    },
+    {
+      "relation_type": "TARGETS",
+      "source": "WO-2024-0891",
+      "target": "TX-1250-A",
+      "key": "TARGETS"
+    },
+    {
+      "relation_type": "USES",
+      "source": "WO-2024-0891",
+      "target": "PART-SKF-6208",
+      "key": "USES"
+    }
+  ]
+}

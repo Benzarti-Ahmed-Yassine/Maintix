@@ -1,0 +1,621 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String
+  name         String
+  role         String       @default("TECHNICIAN") // TECHNICIAN, MAINTENANCE_MANAGER, PRODUCTION_MANAGER, INDUSTRIAL_DIRECTOR, ADMIN
+  department   String?
+  avatar       String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  workOrdersCreated WorkOrder[] @relation("CreatedWorkOrders")
+  workOrdersAssigned WorkOrder[] @relation("AssignedWorkOrders")
+  aiFeedbacks       AIFeedback[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+}
+
+model Factory {
+  id           String           @id @default(uuid())
+  code         String           @unique // e.g. FACTORY-TN-01
+  name         String           // Tunisian Textile Demo Factory
+  location     String           // Monastir Industrial Zone, Tunisia
+  country      String           @default("Tunisia")
+  timezone     String           @default("UTC+1")
+  status       String           @default("OPERATIONAL")
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  productionLines ProductionLine[]
+  machines        Machine[]
+  reports         Report[]
+}
+
+model ProductionLine {
+  id             String          @id @default(uuid())
+  factoryId      String?
+  factory        Factory?        @relation(fields: [factoryId], references: [id])
+  lineCode       String          @unique // Line 1, Line 2, Line 3, Line 4, Line 5
+  name           String          // Weaving Line 4 Monastir
+  status         String          @default("RUNNING") // RUNNING, WARNING, DOWN
+  oee            Float           @default(78.6)
+  availability   Float           @default(89.1)
+  performance    Float           @default(82.4)
+  quality        Float           @default(94.7)
+  currentOutput  Int             @default(125430)
+  targetOutput   Int             @default(140000)
+  downtimeHours  Float           @default(12.4)
+
+  machines       Machine[]
+  productionOrders ProductionOrder[]
+  downtimeEvents DowntimeEvent[]
+  qualityEvents  QualityEvent[]
+  reports        Report[]
+}
+
+model Machine {
+  id                     String             @id @default(uuid())
+  code                   String             @unique // e.g. PCL-GMX-001 or TX-1250-A
+  name                   String             // Picanol GamMax-8-R-190 Rapier Loom
+  type                   String             // Rapier Weaving Loom / Air-Jet Loom / Spinning Frame
+  factoryId              String?
+  factory                Factory?           @relation(fields: [factoryId], references: [id])
+  productionLineId       String
+  productionLine         ProductionLine     @relation(fields: [productionLineId], references: [id])
+  location               String             @default("Bay 4 - Sector B")
+  criticality            String             @default("CRITICAL") // LOW, MEDIUM, HIGH, CRITICAL
+  status                 String             @default("HEALTHY") // HEALTHY, WARNING, CRITICAL, DOWN
+  operatingMode          String             @default("AUTOMATIC") // AUTOMATIC, MANUAL, MAINTENANCE, STOPPED
+  manufacturer           String             @default("Picanol")
+  model                  String             @default("GamMax-8-R-190")
+  serialNumber           String             @default("SN-2024-PCLGMX001")
+  installationDate       DateTime           @default(now())
+  ratedPower             Float              @default(7.5) // kW
+  nominalRPM             Float              @default(1450.0)
+  nominalTemperature     Float              @default(45.0) // °C
+  nominalCurrent         Float              @default(4.2) // A
+  nominalVoltage         Float              @default(400.0) // V
+  maintenanceInterval    Int                @default(90) // Days
+  lastMaintenance        DateTime?
+  nextMaintenance        DateTime?
+  sourceType             String             @default("SIMULATED") // REAL, SIMULATED, IMPORTED, MANUAL, MQTT, OPCUA, SCADA, ERP, MES
+  description            String?            @default("High-performance industrial rapier weaving loom for technical and apparel fabrics.")
+
+  technicalDocumentation String?
+  dxfModelUrl            String?
+  model3dUrl             String?
+  healthScore            Float              @default(98.5)
+  anomalyScore           Float              @default(0.02)
+  failureProbability     Float              @default(0.01)
+  predictedRulDays       Int                @default(60)
+  activeAlertsCount      Int                @default(0)
+  erpRef                 String?            @default("SAP-EQ-10042")
+  mesRef                 String?            @default("MES-LINE4-EQ01")
+  scadaRef               String?            @default("SCADA-PLC-TX01")
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  components             MachineComponent[]
+  sensors                Sensor[]
+  telemetry              Telemetry[]
+  alarms                 Alarm[]
+  anomalies              Anomaly[]
+  predictions            Prediction[]
+  maintenancePlans       MaintenancePlan[]
+  workOrders             WorkOrder[]
+  downtimeEvents         DowntimeEvent[]
+  qualityEvents          QualityEvent[]
+  aiRecommendations      AIRecommendation[]
+  reports                Report[]
+}
+
+model MachineComponent {
+  id               String       @id @default(uuid())
+  machineId        String
+  machine          Machine      @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  code             String       // COMP-MOTOR, COMP-BEARING-L, COMP-GEARBOX, COMP-ROLLERS, COMP-SHAFT
+  name             String       // Main Drive Motor, Main Shaft Bearing (Left), Precision Planetary Gearbox
+  type             String       @default("BEARING") // Motor, Bearing, Gearbox, Shaft, Roller, Transmission, Fan, Pump
+  manufacturer     String?      @default("SKF")
+  model            String?      @default("6208-2RS / C3")
+  installationDate DateTime     @default(now())
+  lastReplacement  DateTime?
+  expectedLifetime Int          @default(365) // Days
+  status           String       @default("HEALTHY") // HEALTHY, WARNING, CRITICAL, REPLACED
+  health           Float        @default(100.0)
+  healthIndex      Float        @default(100.0)
+  riskScore        Float        @default(0.05)
+  rul              Int          @default(180) // Days
+  vibrationRms     Float        @default(1.2)
+  temperature      Float        @default(42.0)
+  position3D       String?      @default("{\"x\": -1.2, \"y\": 0.8, \"z\": 0.4}")
+  dxfReference     String?      @default("DXF-LAYER-BEARING-L")
+
+  sensors          Sensor[]
+}
+
+model Sensor {
+  id                String            @id @default(uuid())
+  machineId         String
+  machine           Machine           @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  componentId       String?
+  component         MachineComponent? @relation(fields: [componentId], references: [id])
+  code              String?           @default("SENS-01") // SENS-VIB-01, SENS-TMP-02
+  name              String            // Vibration RMS, Left Bearing Temp, Motor Current Draw
+  type              String            // VIBRATION, TEMPERATURE, CURRENT, VOLTAGE, SPEED, POWER, PRESSURE, DUST, HUMIDITY, TORQUE
+  manufacturer      String?           @default("IFM Electronic")
+  model             String?           @default("VSA001 / PT100")
+  unit              String            // mm/s, °C, A, V, RPM, kW, bar, ppm, %
+  samplingRate      Float             @default(1.0) // Hz
+  minValue          Float             @default(0.0)
+  maxValue          Float             @default(100.0)
+  warningThreshold  Float             @default(4.5)
+  criticalThreshold Float             @default(7.1)
+  status            String            @default("HEALTHY") // HEALTHY, WARNING, CRITICAL, OFFLINE, ABNORMAL, STALE
+  installationDate  DateTime          @default(now())
+  lastSeen          DateTime          @default(now())
+  signalQuality     Float             @default(99.4) // %
+  batteryLevel      Float?            @default(100.0)
+  firmwareVersion   String?           @default("v2.1.0")
+  sourceType        String            @default("SIMULATED") // SIMULATED, REAL_SENSOR, MQTT, OPCUA
+
+  readings          SensorReading[]
+  healthRecords     SensorHealth[]
+}
+
+model SensorReading {
+  id           String   @id @default(uuid())
+  sensorId     String
+  sensor       Sensor   @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  timestamp    DateTime @default(now())
+  value        Float
+  qualityScore Float    @default(1.0) // 0.0 to 1.0
+  isValid      Boolean  @default(true)
+  isDuplicate  Boolean  @default(false)
+  isStale      Boolean  @default(false)
+}
+
+model SensorHealth {
+  id                  String   @id @default(uuid())
+  sensorId            String
+  sensor              Sensor   @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  timestamp           DateTime @default(now())
+  signalQuality       Float    @default(98.5)
+  communicationHealth Float    @default(99.0)
+  dataCompleteness    Float    @default(100.0)
+  noiseLevel          Float    @default(0.02)
+  signalDrift         Float    @default(0.01)
+  samplingQuality     Float    @default(99.5)
+  status              String   @default("HEALTHY")
+}
+
+model DataQualityRecord {
+  id               String   @id @default(uuid())
+  datasetName      String
+  timestamp        DateTime @default(now())
+  totalRecords     Int
+  missingPercent   Float    @default(0.0)
+  duplicatePercent Float    @default(0.0)
+  invalidPercent   Float    @default(0.0)
+  stalePercent     Float    @default(0.0)
+  qualityScore     Float    @default(99.5)
+  status           String   @default("EXCELLENT")
+}
+
+model Telemetry {
+  id                 String   @id @default(uuid())
+  machineId          String
+  machine            Machine  @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  timestamp          DateTime @default(now())
+
+  // Temperature Signals
+  tempMotor          Float    @default(45.0)
+  tempBearing        Float    @default(42.0)
+  tempGearbox        Float    @default(40.0)
+  tempAmbient        Float    @default(24.0)
+
+  // Vibration Signals
+  vibX               Float    @default(0.8)
+  vibY               Float    @default(0.9)
+  vibZ               Float    @default(0.7)
+  vibRMS             Float    @default(1.4)
+  vibPeak            Float    @default(2.1)
+  crestFactor        Float    @default(1.5)
+  kurtosis           Float    @default(3.0)
+  skewness           Float    @default(0.1)
+  domFreq            Float    @default(120.0)
+
+  // Electrical Signals
+  voltage            Float    @default(400.0)
+  current            Float    @default(4.2)
+  activePower        Float    @default(2.8)
+  reactivePower      Float    @default(0.5)
+  apparentPower      Float    @default(2.85)
+  powerFactor        Float    @default(0.95)
+
+  // Kinematic & Environmental
+  speedRpm           Float    @default(1450.0)
+  torque             Float    @default(18.5)
+  airPressure        Float    @default(6.2)
+  humidity           Float    @default(55.0)
+  dustLevel          Float    @default(12.0)
+
+  // Production Metrics
+  prodSpeed          Float    @default(680.0) // Picks per min
+  cycleTime          Float    @default(0.088)
+  downtimeSec        Int      @default(0)
+
+  // AI/ML Outputs
+  healthIndex        Float    @default(98.0)
+  anomalyScore       Float    @default(0.02)
+  isAnomaly          Boolean  @default(false)
+  anomalyType        String?  @default("None")
+  severity           String   @default("LOW")
+  estimatedRulDays   Int      @default(60)
+
+  sourceType         String   @default("SIMULATED") // SIMULATED | REAL_SENSOR | OPCUA | MQTT | IMPORTED | MANUAL
+}
+
+model Alarm {
+  id             String    @id @default(uuid())
+  machineId      String
+  machine        Machine   @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  code           String    // ALM-VIB-01, ALM-TEMP-02
+  severity       String    // LOW, MEDIUM, HIGH, CRITICAL
+  title          String
+  description    String
+  timestamp      DateTime  @default(now())
+  status         String    @default("ACTIVE") // ACTIVE, ACKNOWLEDGED, RESOLVED
+  acknowledgedBy String?
+  resolvedAt     DateTime?
+  sourceType     String    @default("SIMULATED") // SIMULATED | REAL_SENSOR | MQTT | MANUAL
+
+  anomalies      Anomaly[]
+}
+
+model Anomaly {
+  id                String   @id @default(uuid())
+  machineId         String
+  machine           Machine  @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  alarmId           String?
+  alarm             Alarm?   @relation(fields: [alarmId], references: [id])
+  timestamp         DateTime @default(now())
+  anomalyType       String   // Bearing Wear, Overheating, Motor Misalignment
+  confidence        Float    @default(0.92)
+  severity          String   @default("HIGH")
+  rootCause         String
+  affectedComponent String   @default("Main Shaft Bearing (Left)")
+  metricsSnapshot   String   // JSON string of metrics
+  sourceType        String   @default("SIMULATED") // SIMULATED | REAL_SENSOR | MQTT | MANUAL
+}
+
+model Prediction {
+  id                 String   @id @default(uuid())
+  machineId          String
+  machine            Machine  @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  componentId        String?
+  timestamp          DateTime @default(now())
+  modelVersion       String   @default("v2.0.0")
+  anomalyScore       Float
+  healthIndex        Float
+  failureProbability Float    @default(0.05)
+  predictedRUL       Int      @default(60)
+  rulLowerBound      Int?     @default(50)
+  rulUpperBound      Int?     @default(70)
+  failureType        String
+  severity           String   @default("LOW")
+  confidence         Float
+}
+
+model MaintenancePlan {
+  id                   String   @id @default(uuid())
+  machineId            String
+  machine              Machine  @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  title                String
+  type                 String   @default("PREDICTIVE") // PREVENTIVE, CORRECTIVE, PREDICTIVE
+  scheduledDate        DateTime
+  durationHours        Float    @default(2.5)
+  priority             String   @default("HIGH")
+  status               String   @default("PLANNED") // PLANNED, SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  assignedTechnician   String?  @default("Karim Ben Ali")
+  createdAt            DateTime @default(now())
+}
+
+model WorkOrder {
+  id             String    @id @default(uuid())
+  orderNumber    String    @unique // WO-2026-0891
+  machineId      String
+  machine        Machine   @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  title          String
+  description    String
+  type           String    @default("PREDICTIVE") // PREDICTIVE, PREVENTIVE, CORRECTIVE, EMERGENCY
+  priority       String    @default("HIGH") // URGENT, HIGH, MEDIUM, LOW
+  status         String    @default("OPEN") // DRAFT, OPEN, ASSIGNED, SCHEDULED, IN_PROGRESS, BLOCKED, COMPLETED, CANCELLED
+  createdById    String?
+  createdBy      User?     @relation("CreatedWorkOrders", fields: [createdById], references: [id])
+  assignedToId   String?
+  assignedTo     User?     @relation("AssignedWorkOrders", fields: [assignedToId], references: [id])
+  createdAt      DateTime  @default(now())
+  dueDate        DateTime?
+  completedAt    DateTime?
+  sparePartsUsed String?   // JSON array of spare part IDs and quantities
+  laborCost      Float?    @default(0)
+  partsCost      Float?    @default(0)
+  totalCost      Float?    @default(0)
+  checklistJson  String?   // Step by step intervention checklist
+  technicianNotes String?
+  rootCauseFound String?
+}
+
+model Supplier {
+  id            String      @id @default(uuid())
+  code          String      @unique // SUP-SKF-01
+  name          String      // SKF Industrial Bearings & Motion
+  contactEmail  String      @default("support@skf-industrial.com")
+  contactPhone  String      @default("+216 71 889 000")
+  leadTimeDays  Int         @default(3)
+  reliabilityRating Float   @default(98.5)
+  createdAt     DateTime    @default(now())
+
+  spareParts    SparePart[]
+  purchaseOrders PurchaseOrder[]
+}
+
+model SparePart {
+  id             String         @id @default(uuid())
+  partNumber     String         @unique // SP-BRG-6208-2RS
+  name           String         // High-Precision Ball Bearing 6208
+  category       String         // Bearings, Motors, Belts, Sensors, Gearboxes, Valves
+  machineType    String         // Textile Weaving Loom
+  quantityInStock Int           @default(14)
+  minThreshold   Int            @default(5)
+  unitCost       Float          @default(185.50)
+  supplierId     String?
+  supplierRel    Supplier?      @relation(fields: [supplierId], references: [id])
+  supplier       String         @default("SKF Industrial Supplier")
+  location       String         @default("Shelf B-12")
+  reorderQuantity Int           @default(20)
+
+  purchaseOrders PurchaseOrder[]
+}
+
+model PurchaseOrder {
+  id             String     @id @default(uuid())
+  poNumber       String     @unique // PO-2026-0042
+  supplierId     String?
+  supplier       Supplier?  @relation(fields: [supplierId], references: [id])
+  sparePartId    String?
+  sparePart      SparePart? @relation(fields: [sparePartId], references: [id])
+  quantity       Int        @default(20)
+  unitPrice      Float      @default(185.50)
+  totalAmount    Float      @default(3710.00)
+  status         String     @default("APPROVED") // DRAFT, SUBMITTED, APPROVED, SHIPPED, DELIVERED, CANCELLED
+  orderDate      DateTime   @default(now())
+  expectedDelivery DateTime?
+}
+
+model ProductionOrder {
+  id             String         @id @default(uuid())
+  orderNumber    String         @unique // PO-MES-00152
+  lineId         String
+  line           ProductionLine @relation(fields: [lineId], references: [id])
+  productCode    String         // Cotton Fabric 180cm / Premium Denim #402
+  targetQty      Int            @default(50000) // meters
+  producedQty    Int            @default(38400)
+  status         String         @default("IN_PRODUCTION") // PLANNED, IN_PRODUCTION, COMPLETED, PAUSED
+  startDate      DateTime       @default(now())
+  endDate        DateTime?
+}
+
+model DowntimeEvent {
+  id              String         @id @default(uuid())
+  lineId          String
+  line            ProductionLine @relation(fields: [lineId], references: [id])
+  machineId       String?
+  machine         Machine?       @relation(fields: [machineId], references: [id])
+  startTime       DateTime       @default(now())
+  endTime         DateTime?
+  durationMinutes Int            @default(45)
+  causeCategory   String         @default("MACHINE_FAILURE") // MACHINE_FAILURE, CHANGEOVER, MATERIAL_SHORTAGE, SETUP_ADJUSTMENT, OTHER
+  rootCause       String         @default("Bearing Wear - Machine PCL-GMX-001")
+  financialImpact Float          @default(4200.0)
+  sourceType      String         @default("SIMULATED") // SIMULATED | REAL_SENSOR | MES | MANUAL
+}
+
+model QualityEvent {
+  id              String         @id @default(uuid())
+  lineId          String
+  line            ProductionLine @relation(fields: [lineId], references: [id])
+  machineId       String?
+  machine         Machine?       @relation(fields: [machineId], references: [id])
+  timestamp       DateTime       @default(now())
+  totalInspected  Int            @default(12000)
+  defectCount     Int            @default(142)
+  defectType      String         @default("Weft Tension Flaw")
+  scrapCost       Float          @default(850.0)
+  sourceType      String         @default("SIMULATED") // SIMULATED | MES | MANUAL
+}
+
+model AIRecommendation {
+  id             String       @id @default(uuid())
+  machineId      String
+  machine        Machine      @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  role           String       // TECHNICIAN, MAINTENANCE_MANAGER, PRODUCTION_MANAGER, INDUSTRIAL_DIRECTOR
+  title          String
+  diagnosis      String
+  confidence     Float        @default(0.92)
+  rationale      String
+  actionItems    String       // JSON string array
+  status         String       @default("PENDING") // PENDING, ACCEPTED, REJECTED, MODIFIED
+  feedbackNotes  String?
+  evidenceJson   String?      // Structured evidence
+  sourcesJson    String?      // Citations
+  createdAt      DateTime     @default(now())
+
+  feedbacks      AIFeedback[]
+}
+
+model AIFeedback {
+  id               String           @id @default(uuid())
+  recommendationId String
+  recommendation   AIRecommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+  userId           String?
+  user             User?            @relation(fields: [userId], references: [id])
+  role             String
+  decision         String           // ACCEPT, REJECT, MODIFY
+  actualFault      String?          // Ground truth fault confirmed by engineer
+  userFeedback     String?
+  timestamp        DateTime         @default(now())
+  isValidated      Boolean          @default(true)
+}
+
+model KnowledgeDocument {
+  id           String           @id @default(uuid())
+  title        String
+  category     String           // MANUAL, PROCEDURE, HISTORY, STANDARD, SAFETY
+  status       String           @default("VALIDATED") // PENDING, VALIDATED, REJECTED, ARCHIVED
+  fileUrl      String?
+  content      String
+  version      String           @default("1.0")
+  uploadedBy   String?          @default("Admin")
+  createdAt    DateTime         @default(now())
+
+  chunks       KnowledgeChunk[]
+}
+
+model KnowledgeChunk {
+  id           String            @id @default(uuid())
+  documentId   String
+  document     KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  chunkIndex   Int
+  content      String
+  embedding    String?           // Vector representation
+  metadata     String?
+}
+
+model ModelVersion {
+  id           String   @id @default(uuid())
+  modelName    String   // AnomalyAutoEncoder, RUL_LightGBM, Failure_LGBM, Safe_RL
+  version      String   // v2.0.0
+  taskType     String   @default("RUL_PREDICTION") // ANOMALY_DETECTION, RUL_PREDICTION, FAILURE_CLASSIFICATION, RL_POLICY
+  status       String   @default("PRODUCTION") // PRODUCTION, CHALLENGER, VALIDATED, ARCHIVED, REJECTED
+  accuracy     Float    @default(0.984)
+  precision    Float    @default(0.975)
+  recall       Float    @default(0.968)
+  f1Score      Float    @default(0.971)
+  mae          Float    @default(1.42)
+  rmse         Float    @default(2.15)
+  isCurrent    Boolean  @default(true)
+  parametersJson String?
+  datasetVersion String? @default("gold_phm_v2")
+  trainedAt    DateTime @default(now())
+}
+
+model Report {
+  id               String          @id @default(uuid())
+  reportNumber     String          @unique // REP-2026-08-001
+  reportType       String          // MACHINE_HEALTH, MAINTENANCE_KPI, ANOMALY_SUMMARY, RUL_PROGNOSTICS, SENSOR_HEALTH, WORK_ORDERS, OEE_REPORT, FINANCIAL_IMPACT, SYSTEM_HEALTH
+  title            String
+  factoryId        String?
+  factory          Factory?        @relation(fields: [factoryId], references: [id])
+  productionLineId String?
+  productionLine   ProductionLine? @relation(fields: [productionLineId], references: [id])
+  machineId        String?
+  machine          Machine?        @relation(fields: [machineId], references: [id])
+  periodStart      DateTime
+  periodEnd        DateTime
+  generatedBy      String          @default("Karim Ben Ali")
+  generatedAt      DateTime        @default(now())
+  version          String          @default("1.0")
+  status           String          @default("COMPLETED") // PENDING, GENERATING, COMPLETED, FAILED
+  snapshotId       String          // Reference to ReportSnapshot
+  fileLocation     String?
+  summaryDataJson  String?
+
+  snapshot         ReportSnapshot? @relation(fields: [snapshotId], references: [id])
+}
+
+model ReportSnapshot {
+  id           String   @id @default(uuid())
+  snapshotCode String   @unique // SNAP-2026-08-15-001
+  checksum     String
+  recordCount  Int
+  createdAt    DateTime @default(now())
+  dataSnapshot String   // JSON string of exact frozen dataset
+
+  reports      Report[]
+}
+
+model BIDataset {
+  id               String   @id @default(uuid())
+  datasetCode      String   @unique // machines, sensor_readings, anomalies, rul_predictions, maintenance_events, work_orders, production_events, downtime_events, oee, quality_events, financial_impact, ai_predictions, ai_feedback
+  tableName        String   // dim_machine, fact_sensor_reading, fact_anomaly, etc.
+  description      String
+  schemaType       String   @default("FACT") // DIMENSION, FACT
+  recordCount      Int      @default(0)
+  lastExportedAt   DateTime @default(now())
+  fileFormat       String   @default("CSV, PARQUET")
+  checksum         String?
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  role      String?  // ALL, TECHNICIAN, MAINTENANCE_MANAGER, PRODUCTION_MANAGER, INDUSTRIAL_DIRECTOR, ADMIN
+  severity  String   @default("INFO") // CRITICAL, HIGH, MEDIUM, LOW, INFO
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  linkUrl   String?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String   // MACHINE_CREATED, WORK_ORDER_UPDATED, MODEL_RETRAINED, DEMO_TRIGGERED
+  entity    String   // Machine, WorkOrder, Sensor, ModelVersion
+  entityId  String?
+  details   String?
+  ipAddress String?  @default("127.0.0.1")
+  timestamp DateTime @default(now())
+}
+
+model ERPRecord {
+  id         String   @id @default(uuid())
+  erpId      String   @unique
+  entityType String   // ASSET, WORK_ORDER, PURCHASE_ORDER, COST_CENTER, SPARE_PART
+  refCode    String
+  syncedAt   DateTime @default(now())
+  dataJson   String
+}
+
+model MESRecord {
+  id         String   @id @default(uuid())
+  mesId      String   @unique
+  entityType String   // LINE_STATUS, OEE_EVENT, RUNTIME, PRODUCTION_ORDER
+  refCode    String
+  syncedAt   DateTime @default(now())
+  dataJson   String
+}
+
+model SCADARecord {
+  id         String   @id @default(uuid())
+  tagId      String   @unique
+  tagName    String   // PLC_PCLGMX001_VIB_RMS
+  currentVal Float
+  quality    String   @default("GOOD")
+  timestamp  DateTime @default(now())
+}

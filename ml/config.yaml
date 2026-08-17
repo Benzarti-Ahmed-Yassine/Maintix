@@ -1,0 +1,234 @@
+# ============================================================================
+# MAINTIX AI Platform — Master Configuration
+# ============================================================================
+
+# --- General ---
+platform_name: "MAINTIX"
+version: "2.0.0"
+environment: "development"   # development | production
+log_level: "INFO"
+
+# --- Data Directories ---
+data_dir: "ml/data"
+raw_dir: "ml/data/raw"
+silver_dir: "ml/data/silver"
+gold_dir: "ml/data/gold"
+reports_dir: "ml/reports"
+mlops_dir: "ml/mlops"
+
+# --- Dataset Downloads ---
+datasets:
+  nasa_cmapss:
+    enabled: true
+    url: "https://data.nasa.gov/download/ff5v-kuh6/application%2Fzip"
+    alt_url: "https://phm-datasets.s3.amazonaws.com/NASA/6.+Turbofan+Engine+Degradation+Simulation+Data+Set.zip"
+    size_mb: 50
+    priority: 1           # Download first — smallest, fastest for initial training
+  nasa_ims:
+    enabled: false        # Set true when 6 GB bandwidth is available
+    url: "https://phm-datasets.s3.amazonaws.com/NASA/4.+Bearings.zip"
+    size_mb: 6000
+    priority: 2
+  nasa_femto:
+    enabled: false        # Set true when 2 GB bandwidth is available
+    url: "https://phm-datasets.s3.amazonaws.com/NASA/10.+FEMTO+Bearing.zip"
+    size_mb: 2000
+    priority: 3
+  paderborn:
+    enabled: false        # Set true when 10 GB bandwidth is available
+    url: "https://mb.uni-paderborn.de/en/kat/research/bearing-datacenter/data-sets-and-download"
+    size_mb: 10000
+    priority: 4
+  phm:
+    enabled: false
+    url: "https://data.phmsociety.org/phm-society-data-repository/"
+    size_mb: 500
+    priority: 5
+
+# --- Feature Engineering ---
+feature_engineering:
+  rolling_windows: [5, 10, 20, 50]     # cycles/samples
+  degradation_rate_window: 10
+  spectral_features: true
+  interaction_features: true
+  cumulative_features: true
+
+# --- Data Splitting ---
+split:
+  strategy: "trajectory"      # trajectory | time | random
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  min_trajectory_length: 10   # minimum cycles per trajectory for inclusion
+
+# --- RUL Labeling ---
+rul:
+  max_rul_cap: 125             # Cap RUL at this value (C-MAPSS standard)
+  unit: "cycles"               # cycles | days | hours
+  monotonic_validation: true   # Validate monotonically decreasing RUL
+  early_warning_threshold: 30  # Cycles before failure to measure early warning
+
+# --- Models ---
+models:
+  lgbm_rul:
+    n_estimators: 300
+    learning_rate: 0.05
+    max_depth: 7
+    num_leaves: 63
+    min_child_samples: 20
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+
+  cnn_rul:
+    enabled: true             # Set false to skip CNN if PyTorch not available
+    sequence_length: 30
+    filters: [32, 64, 128]
+    kernel_sizes: [3, 5, 7]
+    dropout: 0.3
+    epochs: 50
+    batch_size: 64
+    learning_rate: 0.001
+
+  autoencoder:
+    hidden_dims: [64, 32, 16, 32, 64]
+    dropout: 0.2
+    epochs: 100
+    batch_size: 256
+    learning_rate: 0.001
+    anomaly_threshold_percentile: 95    # Calibrated on validation set
+
+  isolation_forest:
+    n_estimators: 100
+    contamination: 0.05
+    max_samples: "auto"
+
+  lgbm_failure:
+    n_estimators: 200
+    learning_rate: 0.05
+    max_depth: 6
+    num_leaves: 31
+    class_weight: "balanced"
+
+# --- Health Index ---
+health_index:
+  # Weights for multi-signal health index
+  rul_weight: 0.40
+  anomaly_weight: 0.35
+  failure_prob_weight: 0.25
+  # Degradation curve shape
+  curve_shape: "exponential"    # linear | exponential | piecewise
+
+# --- Risk Engine ---
+risk:
+  rul_weight: 0.35
+  failure_prob_weight: 0.30
+  anomaly_weight: 0.20
+  criticality_weight: 0.15
+  thresholds:
+    critical: 0.80
+    high: 0.60
+    medium: 0.35
+    low: 0.0
+
+# --- MLOps ---
+mlops:
+  # Champion/Challenger acceptance criteria
+  challenger_acceptance:
+    max_mae_degradation_pct: 5.0        # Challenger MAE must not be > 5% worse
+    min_recall_improvement_pct: -2.0    # Critical recall must not drop > 2%
+    max_false_alarm_increase_pct: 10.0  # False alarms must not increase > 10%
+    latency_max_ms: 200                 # Inference latency constraint
+    leakage_check: true
+    robustness_check: true
+
+  # Retraining triggers
+  retraining_triggers:
+    new_validated_samples_threshold: 500
+    drift_psi_threshold: 0.2            # PSI > 0.2 = significant drift
+    drift_ks_pvalue_threshold: 0.05     # KS p-value < 0.05 = distribution change
+    error_drift_threshold: 0.15         # MAE increase > 15% from baseline
+    scheduled_days: 30                  # Force retrain every 30 days
+
+  # Model statuses
+  statuses:
+    - EXPERIMENTAL
+    - CHALLENGER
+    - VALIDATED
+    - PRODUCTION
+    - ARCHIVED
+    - REJECTED
+
+# --- RAG ---
+rag:
+  chunk_size_tokens: 1000          # Target chunk size
+  chunk_overlap_tokens: 150        # Overlap between chunks
+  embedding_model: "all-MiniLM-L6-v2"    # Sentence-transformers model (local, no API)
+  top_k_retrieval: 5
+  top_k_rerank: 3
+  bm25_weight: 0.4                 # Weight for BM25 in hybrid fusion
+  dense_weight: 0.6                # Weight for dense in hybrid fusion
+  chroma_persist_dir: "ml/data/gold/rag/chroma"
+  knowledge_validation_required: true   # Only VALIDATED chunks in trusted layer
+
+# --- Graph RAG ---
+graph:
+  persist_path: "ml/data/gold/graph/maintix_graph.json"
+  max_hops: 3                      # Max graph traversal depth
+  top_k_graph_results: 10
+  entity_confidence_threshold: 0.7
+
+# --- AI Gateway ---
+ai_gateway:
+  primary_provider: "gemini"       # ollama | gemini
+  ollama:
+    base_url: "http://localhost:11434"
+    model: "llama3.2"              # Model to use — must be pulled first
+    timeout_s: 30
+    temperature: 0.1               # Low temperature for factual industrial answers
+  gemini:
+    enabled: true                  # Set true + add GEMINI_API_KEY env var
+    model: "gemini-1.5-flash"
+    temperature: 0.1
+  fallback_to_structured: true     # Return structured answer if LLM unavailable
+  hallucination_guard: true
+  source_types:
+    - OBSERVED_DATA
+    - INFERENCE
+    - DOCUMENTATION
+    - RECOMMENDATION
+    - UNKNOWN
+
+# --- Reinforcement Learning ---
+rl:
+  environment:
+    max_episode_steps: 365          # 1 year horizon
+    degradation_rate_mean: 0.3      # Health points lost per day (nominal)
+    degradation_rate_std: 0.05
+    failure_threshold: 10.0         # Health index below this = failure
+    recovery_health: 95.0           # Health after replacement
+
+  actions:
+    - WAIT
+    - INSPECT
+    - SCHEDULE_PREVENTIVE
+    - REPLACE_COMPONENT
+    - STOP_MACHINE
+
+  reward:
+    avoided_failure_value: 24650    # $ saved per avoided catastrophic failure
+    inspection_cost: 200            # $ per inspection
+    preventive_cost: 1500           # $ per preventive intervention
+    replacement_cost: 3200          # $ per component replacement
+    downtime_cost_per_day: 1850     # $ per day of unplanned downtime
+    unnecessary_intervention_penalty: -500
+    catastrophic_failure_penalty: -50000
+    unsafe_action_penalty: -100000
+
+  training:
+    algorithm: "behavior_cloning"   # behavior_cloning | cql
+    episodes: 1000
+    eval_episodes: 100
+    discount_factor: 0.99
+    batch_size: 64
