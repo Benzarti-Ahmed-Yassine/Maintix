@@ -92,7 +92,7 @@ class IndustrialKnowledgeGraph:
         return {"nodes": nodes, "edges": edges, "center_entity": node_id}
 
     def save(self) -> None:
-        data = nx.node_link_data(self.graph, edges="links")
+        data = nx.node_link_data(self.graph, edges="edges")
         with open(self.persist_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
         logger.info(f"Knowledge Graph saved -> {self.persist_file} ({self.graph.number_of_nodes()} nodes, {self.graph.number_of_edges()} edges)")
@@ -102,12 +102,16 @@ class IndustrialKnowledgeGraph:
             try:
                 with open(self.persist_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
+
+                edge_key = "edges" if "edges" in data else "links"
+
                 self.graph = nx.node_link_graph(
                     data,
                     directed=True,
                     multigraph=True,
-                    edges="links",
+                    edges=edge_key,
                 )
-                logger.info(f"Loaded Knowledge Graph with {self.graph.number_of_nodes()} nodes.")
+                logger.info(f"Loaded Knowledge Graph with {self.graph.number_of_nodes()} nodes and {self.graph.number_of_edges()} edges.")
             except Exception as e:
                 logger.error(f"Error loading graph: {e}")
+
