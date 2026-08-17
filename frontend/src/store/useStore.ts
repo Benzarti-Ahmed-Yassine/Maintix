@@ -40,6 +40,8 @@ interface AppState {
 // Initial state from localStorage if available
 const storedToken = localStorage.getItem('maintix_token');
 const storedUser = localStorage.getItem('maintix_user');
+const storedRole = localStorage.getItem('maintix_active_role') as RoleType | null;
+
 let initialUser: User | null = null;
 if (storedUser) {
   try {
@@ -56,18 +58,19 @@ if (storedToken) {
 export const useAppStore = create<AppState>((set) => ({
   currentUser: initialUser,
   token: storedToken,
-  activeRole: initialUser?.role || 'TECHNICIAN',
+  activeRole: storedRole || initialUser?.role || null,
   selectedMachineCode: 'TX-1250-A',
   activeScenario: 'NORMAL_OPERATION',
   isCopilotOpen: false,
   liveConnected: true,
   refreshCounter: 0,
   lastBroadcastMessage: null,
-  liveTelemetry: {}, // Zero hardcoded mock sensor data; filled ONLY from WebSocket or API
+  liveTelemetry: {},
 
   loginUser: (user, token) => {
     localStorage.setItem('maintix_token', token);
     localStorage.setItem('maintix_user', JSON.stringify(user));
+    localStorage.setItem('maintix_active_role', user.role);
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     set({
       currentUser: user,
@@ -79,6 +82,7 @@ export const useAppStore = create<AppState>((set) => ({
   logoutUser: () => {
     localStorage.removeItem('maintix_token');
     localStorage.removeItem('maintix_user');
+    localStorage.removeItem('maintix_active_role');
     delete axios.defaults.headers.common['Authorization'];
     set({
       currentUser: null,
@@ -89,12 +93,43 @@ export const useAppStore = create<AppState>((set) => ({
 
   setActiveRole: (role) => {
     set((state) => {
-      if (state.currentUser && role) {
-        const updatedUser = { ...state.currentUser, role };
+      if (role) {
+        localStorage.setItem('maintix_active_role', role);
+        const updatedUser: User = state.currentUser
+          ? { ...state.currentUser, role }
+          : {
+              id: `user-${role.toLowerCase()}`,
+              name:
+                role === 'INDUSTRIAL_DIRECTOR'
+                  ? 'Dr. Yassine Benzarti'
+                  : role === 'MAINTENANCE_MANAGER'
+                  ? 'Sonia Trabelsi'
+                  : role === 'PRODUCTION_MANAGER'
+                  ? 'Tarek Mansour'
+                  : role === 'ADMIN'
+                  ? 'Administrateur Système'
+                  : 'Karim Ben Salem',
+              email: `${role.toLowerCase()}@maintix.com`,
+              role,
+              department:
+                role === 'INDUSTRIAL_DIRECTOR'
+                  ? 'Direction Industrielle'
+                  : role === 'MAINTENANCE_MANAGER'
+                  ? 'Département Maintenance'
+                  : role === 'PRODUCTION_MANAGER'
+                  ? 'Lignes de Production'
+                  : role === 'ADMIN'
+                  ? 'Administration IT/OT'
+                  : 'Équipe Terrain'
+            };
         localStorage.setItem('maintix_user', JSON.stringify(updatedUser));
         return { activeRole: role, currentUser: updatedUser };
+      } else {
+        localStorage.removeItem('maintix_active_role');
+        localStorage.removeItem('maintix_user');
+        localStorage.removeItem('maintix_token');
+        return { activeRole: null, currentUser: null, token: null };
       }
-      return { activeRole: role };
     });
   },
 

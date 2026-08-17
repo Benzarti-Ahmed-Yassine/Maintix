@@ -30,18 +30,18 @@ import {
 import { useAppStore } from '../store/useStore.js';
 
 export const Sidebar: React.FC = () => {
-  const { currentUser, setActiveRole, logoutUser } = useAppStore();
-  const role = currentUser?.role || 'TECHNICIAN';
+  const { currentUser, activeRole, setActiveRole, logoutUser } = useAppStore();
+  const role = activeRole || currentUser?.role || 'TECHNICIAN';
   const navigate = useNavigate();
 
   const handleSwitchRole = () => {
     setActiveRole(null);
-    navigate('/role-selection');
+    navigate('/role-selection', { replace: true });
   };
 
   const handleLogout = () => {
     logoutUser();
-    navigate('/role-selection');
+    navigate('/role-selection', { replace: true });
   };
 
   const technicianLinks = [

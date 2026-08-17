@@ -67,6 +67,9 @@ export const App: React.FC = () => {
   // Sync activeRole based on current URL path if directly navigated
   useEffect(() => {
     const path = location.pathname;
+    if (path === '/' || path === '/role-selection') {
+      return;
+    }
     if (path.startsWith('/technician')) setActiveRole('TECHNICIAN');
     else if (path.startsWith('/maintenance')) setActiveRole('MAINTENANCE_MANAGER');
     else if (path.startsWith('/production')) setActiveRole('PRODUCTION_MANAGER');
