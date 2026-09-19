@@ -369,6 +369,29 @@ def query_rag(payload: RagQueryPayload):
     )
 
 
+@app.post("/rag/ingest")
+def ingest_rag_document(payload: RagIngestPayload):
+    """Ingests a new document from Admin into the RAG vector store."""
+    try:
+        chunks = rag_service.processor.chunk_document(
+            doc_id=payload.doc_id,
+            title=payload.title,
+            content=payload.content,
+            category=payload.category,
+        )
+        embeddings = rag_service.embedder.embed_texts([c.text for c in chunks])
+        rag_service.vector_store.add_chunks(chunks, embeddings)
+        return {
+            "success": True,
+            "doc_id": payload.doc_id,
+            "title": payload.title,
+            "chunks_created": len(chunks),
+            "message": f"Document '{payload.title}' ingested successfully into vector store ({len(chunks)} chunks)."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/train-model")
 def train_model(request: RetrainRequest):
     """Triggers MLOps continuous learning retraining workflow."""

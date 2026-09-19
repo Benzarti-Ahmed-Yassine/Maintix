@@ -289,48 +289,36 @@ export const AdminControlPanel: React.FC = () => {
           </div>
         </div>
 
-        {/* Demo Scenarios & MLOps */}
+        {/* Edge Gateway & ESP32 Telemetry Status */}
         <div className="space-y-6">
           <div className="industrial-card p-5 space-y-4">
             <h3 className="text-xs font-bold text-slate-300 tracking-wider uppercase flex items-center gap-2">
-              <Play size={16} className="text-amber-400" /> Live Demo Scenario Injector
+              <Radio size={16} className="text-cyan-400" /> Passerelle Edge & Capteurs ESP32
             </h3>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button
-                onClick={() => triggerScenario('NORMAL')}
-                className={`p-2.5 rounded-lg font-bold border transition text-left ${
-                  activeScenario === 'NORMAL' ? 'bg-emerald-950 border-emerald-500 text-emerald-400' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-                }`}
-              >
-                Normal Operation (Nominal)
-              </button>
-              <button
-                onClick={() => triggerScenario('BEARING_FAILURE')}
-                className={`p-2.5 rounded-lg font-bold border transition text-left ${
-                  activeScenario === 'BEARING_FAILURE' ? 'bg-red-950 border-red-500 text-red-400' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-                }`}
-              >
-                Bearing Failure (TX-1250-A)
-              </button>
-              <button
-                onClick={() => triggerScenario('OVERHEATING')}
-                className={`p-2.5 rounded-lg font-bold border transition text-left ${
-                  activeScenario === 'OVERHEATING' ? 'bg-amber-950 border-amber-500 text-amber-400' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-                }`}
-              >
-                Overheating Anomaly
-              </button>
-              <button
-                onClick={() => triggerScenario('CRITICAL')}
-                className={`p-2.5 rounded-lg font-bold border transition text-left ${
-                  activeScenario === 'CRITICAL' ? 'bg-red-950 border-red-500 text-red-400' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-                }`}
-              >
-                Critical Fleet Alert
-              </button>
+            <div className="space-y-3 text-xs">
+              <div className="p-3 bg-slate-900 rounded-lg flex items-center justify-between border border-slate-800">
+                <div>
+                  <p className="font-bold text-white">ESP32 NodeMCU — Weaving Loom 1 (TX-1250-A)</p>
+                  <p className="text-[10px] text-slate-400">Topic: maintix/machines/TX-1250-A/telemetry (MPU6050 + DS18B20 + SCT013)</p>
+                </div>
+                <span className="px-2 py-0.5 bg-cyan-950 text-cyan-400 font-mono text-[10px] rounded font-bold border border-cyan-800">
+                  ONLINE (1 Hz)
+                </span>
+              </div>
+
+              <div className="p-3 bg-slate-900 rounded-lg flex items-center justify-between border border-slate-800">
+                <div>
+                  <p className="font-bold text-white">ESP32 DevKit — Jacquard Machine (PCL-GMX-001)</p>
+                  <p className="text-[10px] text-slate-400">Topic: maintix/machines/PCL-GMX-001/telemetry (Vib RMS + Temp + RPM)</p>
+                </div>
+                <span className="px-2 py-0.5 bg-emerald-950 text-emerald-400 font-mono text-[10px] rounded font-bold border border-emerald-800">
+                  CONNECTED
+                </span>
+              </div>
             </div>
           </div>
+
 
           <div className="industrial-card p-5 space-y-4">
             <h3 className="text-xs font-bold text-slate-300 tracking-wider uppercase flex items-center gap-2">
@@ -355,100 +343,100 @@ export const AdminControlPanel: React.FC = () => {
 
       {/* CREATE ACCOUNT MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0f172a] border border-slate-800 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-sm font-bold text-white uppercase flex items-center gap-2">
-                <UserPlus size={16} className="text-blue-400" /> Add New User Account by Role
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-slate-900">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <h3 className="text-sm font-bold text-slate-900 uppercase flex items-center gap-2">
+                <UserPlus size={16} className="text-emerald-600" /> Ajouter un Utilisateur
               </h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-700">
                 <X size={18} />
               </button>
             </div>
 
             {formMsg && (
-              <div className={`p-3 rounded-lg text-xs font-bold ${formMsg.type === 'success' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'}`}>
+              <div className={`p-3 rounded-lg text-xs font-bold ${formMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
                 {formMsg.text}
               </div>
             )}
 
             <form onSubmit={handleCreateUser} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-300 mb-1 font-semibold">Full Name *</label>
+                <label className="block text-slate-700 mb-1 font-semibold">Nom Complet *</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Ahmed Ben Salem"
+                  placeholder="ex: Ahmed Ben Salem"
                   value={newUser.name}
                   onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 mb-1 font-semibold">Email Address *</label>
+                <label className="block text-slate-700 mb-1 font-semibold">Adresse Email *</label>
                 <input
                   type="email"
                   required
                   placeholder="ahmed.salem@maintix.com"
                   value={newUser.email}
                   onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 mb-1 font-semibold">Password</label>
+                <label className="block text-slate-700 mb-1 font-semibold">Mot de passe</label>
                 <input
                   type="password"
-                  placeholder="Leave empty for default password"
+                  placeholder="Laisser vide pour mot de passe par défaut"
                   value={newUser.password}
                   onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 mb-1 font-semibold">Assigned Role *</label>
+                  <label className="block text-slate-700 mb-1 font-semibold">Rôle Assigné *</label>
                   <select
                     value={newUser.role}
                     onChange={(e) => setNewUser({ ...newUser, role: e.target.value as RoleType })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="TECHNICIAN">Technician</option>
-                    <option value="MAINTENANCE_MANAGER">Maintenance Manager</option>
-                    <option value="PRODUCTION_MANAGER">Production Manager</option>
-                    <option value="INDUSTRIAL_DIRECTOR">Industrial Director</option>
-                    <option value="ADMIN">Platform Admin</option>
+                    <option value="TECHNICIAN">Technicien</option>
+                    <option value="MAINTENANCE_MANAGER">Resp. Maintenance</option>
+                    <option value="PRODUCTION_MANAGER">Resp. Production</option>
+                    <option value="INDUSTRIAL_DIRECTOR">Directeur Industriel</option>
+                    <option value="ADMIN">Administrateur</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 mb-1 font-semibold">Department</label>
+                  <label className="block text-slate-700 mb-1 font-semibold">Département</label>
                   <input
                     type="text"
-                    placeholder="Weaving Plant #4"
+                    placeholder="Atelier Tissage #4"
                     value={newUser.department}
                     onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-lg"
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg"
                 >
-                  Cancel
+                  Annuler
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg shadow-blue-600/30"
+                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-md shadow-emerald-600/20"
                 >
-                  Create Account
+                  Créer le Compte
                 </button>
               </div>
             </form>

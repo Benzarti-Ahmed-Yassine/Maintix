@@ -1,13 +1,17 @@
-# ── Stage 1: Builder ──────────────────────────────────────────
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install deps (copies package files only first for cache efficiency)
-COPY package.json package-lock.json* ./
+RUN apk add --no-cache openssl
+
+# Install all deps (copies package files first for cache efficiency)
+COPY package.json ./
 COPY prisma ./prisma
 
-RUN npm ci --omit=dev && npm i --save-dev typescript tsx prisma
+RUN npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && npm config set fetch-retries 5 \
+    && npm install --network-timeout=100000
 
 COPY . .
 
@@ -19,8 +23,14 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
+# Install runtime dependencies for Prisma client on Alpine
+RUN apk add --no-cache openssl curl
+
 ENV NODE_ENV=production
 ENV PORT=4000
+
+# Create persistent database folder
+RUN mkdir -p /data
 
 # Copy only what's needed at runtime
 COPY --from=builder /app/dist ./dist

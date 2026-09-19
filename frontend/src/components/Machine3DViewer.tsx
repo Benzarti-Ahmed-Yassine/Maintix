@@ -31,7 +31,8 @@ export const Machine3DViewer: React.FC<Machine3DProps> = ({
 
     const renderFrame = () => {
       angle += 0.005; // Gentle auto-rotation
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const width = canvas.width;
       const height = canvas.height;
@@ -39,7 +40,7 @@ export const Machine3DViewer: React.FC<Machine3DProps> = ({
       const centerY = height / 2 + 10;
 
       // 3D Grid Floor
-      ctx.strokeStyle = '#1e293b';
+      ctx.strokeStyle = '#e2e8f0';
       ctx.lineWidth = 1;
       for (let i = -150; i <= 150; i += 30) {
         ctx.beginPath();
@@ -135,30 +136,30 @@ export const Machine3DViewer: React.FC<Machine3DProps> = ({
   }, [rotationY, zoom, isAnomalyActive]);
 
   return (
-    <div className="relative w-full h-full bg-[#0a0f1d] rounded-xl border border-slate-800/80 overflow-hidden flex flex-col">
-      {/* Top Bar Controls matching screenshot */}
-      <div className="px-4 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between z-10">
+    <div className="relative w-full h-full bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col shadow-sm">
+      {/* Top Bar Controls */}
+      <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between z-10">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab('3D')}
-            className={`px-2.5 py-1 text-xs font-semibold rounded ${
-              activeTab === '3D' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
+              activeTab === '3D' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             3D View
           </button>
           <button
             onClick={() => setActiveTab('DXF')}
-            className={`px-2.5 py-1 text-xs font-semibold rounded ${
-              activeTab === 'DXF' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
+              activeTab === 'DXF' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             DXF Schema
           </button>
           <button
             onClick={() => setActiveTab('SENSORS')}
-            className={`px-2.5 py-1 text-xs font-semibold rounded ${
-              activeTab === 'SENSORS' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
+              activeTab === 'SENSORS' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             Sensors Map
@@ -168,21 +169,21 @@ export const Machine3DViewer: React.FC<Machine3DProps> = ({
         <div className="flex items-center gap-1">
           <button
             onClick={() => setZoom((z) => Math.min(z + 0.15, 1.8))}
-            className="p-1 text-slate-400 hover:text-white bg-slate-800/60 rounded"
+            className="p-1 text-slate-500 hover:text-slate-800 bg-white border border-slate-200 rounded shadow-sm hover:bg-slate-100"
             title="Zoom In"
           >
             <ZoomIn size={14} />
           </button>
           <button
             onClick={() => setZoom((z) => Math.max(z - 0.15, 0.6))}
-            className="p-1 text-slate-400 hover:text-white bg-slate-800/60 rounded"
+            className="p-1 text-slate-500 hover:text-slate-800 bg-white border border-slate-200 rounded shadow-sm hover:bg-slate-100"
             title="Zoom Out"
           >
             <ZoomOut size={14} />
           </button>
           <button
             onClick={() => setRotationY((r) => r + 0.5)}
-            className="p-1 text-slate-400 hover:text-white bg-slate-800/60 rounded"
+            className="p-1 text-slate-500 hover:text-slate-800 bg-white border border-slate-200 rounded shadow-sm hover:bg-slate-100"
             title="Rotate View"
           >
             <RotateCw size={14} />
@@ -191,32 +192,32 @@ export const Machine3DViewer: React.FC<Machine3DProps> = ({
       </div>
 
       {/* Canvas Canvas Render */}
-      <div className="relative flex-1 w-full h-full min-h-[260px] flex items-center justify-center">
+      <div className="relative flex-1 w-full h-full min-h-[260px] flex items-center justify-center bg-[#f8fafc]">
         <canvas ref={canvasRef} width={480} height={260} className="w-full h-full object-contain cursor-grab" />
 
-        {/* Overlay Component Quick Selector Bar matching reference UI screenshot 2 */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur border border-slate-700/80 rounded-lg px-2 py-1 flex items-center gap-1 text-xs">
+        {/* Overlay Component Quick Selector Bar */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur border border-slate-200 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 text-xs shadow-md">
           <button
             onClick={() => onSelectComponent?.('Drive Motor')}
-            className="px-2 py-1 rounded text-slate-300 hover:bg-slate-800 hover:text-white"
+            className="px-2 py-1 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium"
           >
             Motor
           </button>
           <button
             onClick={() => onSelectComponent?.('Left Shaft Bearing')}
-            className="px-2 py-1 rounded bg-red-600/30 text-red-300 border border-red-500/50 font-bold"
+            className="px-2 py-1 rounded-lg bg-red-50 text-red-600 border border-red-200 font-bold"
           >
             Bearing (Left) ⚠️
           </button>
           <button
             onClick={() => onSelectComponent?.('Gearbox')}
-            className="px-2 py-1 rounded text-slate-300 hover:bg-slate-800 hover:text-white"
+            className="px-2 py-1 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium"
           >
             Gearbox
           </button>
           <button
             onClick={() => onSelectComponent?.('Warp Rollers')}
-            className="px-2 py-1 rounded text-slate-300 hover:bg-slate-800 hover:text-white"
+            className="px-2 py-1 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium"
           >
             Rollers
           </button>

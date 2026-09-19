@@ -20,6 +20,7 @@ from ml.src.ai_gateway.gemini_client import GeminiClient
 from ml.src.ai_gateway.hallucination_guard import HallucinationGuard
 from ml.src.ai_gateway.ollama_client import OllamaClient
 from ml.src.graph.hybrid_retriever import GraphVectorHybridEngine
+from ml.src.rag.problem_extractor import ProblemExtractor
 
 logger = logging.getLogger("maintix.ai_gateway")
 
@@ -37,6 +38,7 @@ class AIGateway:
         self.gemini = GeminiClient()
         self.hybrid_engine = hybrid_engine or GraphVectorHybridEngine()
         self.guard = HallucinationGuard()
+        self.extractor = ProblemExtractor()
 
     def process_query(
         self,
@@ -111,7 +113,15 @@ DOCUMENTATION EXCERPTS:
         # 4. Hallucination audit
         audit = self.guard.audit_response(raw_answer, telemetry)
 
-        # 5. Extract Evidence & Recommended Actions
+        # 5. Extract Structured Problem Entity & Product Integration Actions
+        extracted_problem = self.extractor.extract_problem(
+            query_text=query_text,
+            machine_code=machine_code,
+            live_telemetry=telemetry,
+            retrieved_context=user_prompt,
+        )
+
+        # 6. Extract Evidence & Recommended Actions
         evidence = [
             f"Live Vibration RMS: {telemetry.get('vib_rms', 1.4):.1f} mm/s",
             f"Bearing Temperature: {telemetry.get('temp_bearing', 42.0):.1f}°C",
@@ -120,11 +130,11 @@ DOCUMENTATION EXCERPTS:
         ]
 
         recommended_actions = [
-            "Inspect Left Drive Shaft Bearing and verify runout tolerance (<= 0.02 mm)",
-            "Reserve SKF 6208-2RS ball bearing from Shelf B-12",
-            "Apply 15g SKF LGMT 3 high-temp grease upon replacement",
-            "Log completed maintenance in CMMS work order",
-        ] if telemetry.get("vib_rms", 1.4) > 4.5 else [
+            f"Inspect {extracted_problem['subsystem']} and verify runout tolerance (<= 0.02 mm)",
+            f"Reserve {extracted_problem['required_spare_part']['name']} from {extracted_problem['required_spare_part']['location']}",
+            f"Apply {extracted_problem['required_spare_part']['lubricant']} upon replacement",
+            f"Create CMMS Work Order ({extracted_problem['work_order_draft']['priority']} priority)",
+        ] if telemetry.get("vib_rms", 1.4) > 4.5 or extracted_problem["severity"] == "CRITICAL" else [
             "Maintain standard production monitoring",
             "Log routine inspection check in shift report",
         ]
@@ -132,14 +142,16 @@ DOCUMENTATION EXCERPTS:
         return {
             "query": query_text,
             "role": role,
-            "machine_code": machine_code,
+            "machine_code": extracted_problem["machine_code"],
             "answer": raw_answer,
-            "confidence": 0.94 if telemetry.get("vib_rms", 1.4) > 4.5 else 0.98,
+            "confidence": extracted_problem.get("confidence", 0.94),
             "active_ai_engine": active_engine,
             "audit": audit,
             "evidence": evidence,
             "sources": retrieval_data["sources"],
             "recommended_actions": recommended_actions,
+            "extracted_problem": extracted_problem,
+            "product_actions": extracted_problem["product_actions"],
             "timestamp": time.time(),
         }
 

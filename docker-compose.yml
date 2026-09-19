@@ -10,6 +10,7 @@ networks:
     name: maintix_observability
 
 volumes:
+  maintix_data:
   postgres_data:
   timescaledb_data:
   redis_data:
@@ -22,17 +23,18 @@ services:
   # ── FRONTEND SERVICE ────────────────────────────────────────────────────────
   frontend:
     build:
-      context: ./apps/frontend
+      context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "4173:4173"
+      - "${FRONTEND_PORT:-3000}:3000"
     networks:
       - maintix_frontend
+      - maintix_backend
     depends_on:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:4173"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 15s
       timeout: 10s
       retries: 3
@@ -41,14 +43,21 @@ services:
   # ── BACKEND CORE SERVICE ───────────────────────────────────────────────────
   backend:
     build:
-      context: ./apps/backend
+      context: ./backend
       dockerfile: Dockerfile
     environment:
-      - DATABASE_URL=postgresql+asyncpg://maintix:maintix@timescaledb:5432/maintix
+      - DATABASE_URL=file:/data/maintix.db
       - REDIS_URL=redis://redis:6379/0
       - MQTT_BROKER=mqtt://mosquitto:1883
+      - ML_SERVICE_URL=http://ml-service:8000
+      - PORT=4000
+      - JWT_SECRET=${JWT_SECRET:-maintix_jwt_secret_key_2026}
+      - STRICT_AUTH=${STRICT_AUTH:-false}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+    volumes:
+      - maintix_data:/data
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-4000}:4000"
     depends_on:
       timescaledb:
         condition: service_healthy
@@ -61,11 +70,36 @@ services:
       - maintix_backend
       - maintix_observability
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 15s
       timeout: 10s
       retries: 5
       start_period: 15s
+
+  # ── ML SERVICE (Industrial AI Inference Engine) ─────────────────────────────
+  ml-service:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    environment:
+      - PYTHONPATH=/app
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OLLAMA_BASE_URL=http://ollama:11434
+    ports:
+      - "8000:8000"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - maintix_backend
+      - maintix_observability
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
 
   # ── OLLAMA LLM SERVICE ──────────────────────────────────────────────────────
   ollama:
@@ -218,7 +252,7 @@ services:
       - grafana_data:/var/lib/grafana
       - ./infrastructure/grafana:/etc/grafana/provisioning
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT:-3001}:3000"
     networks:
       - maintix_observability
     depends_on:

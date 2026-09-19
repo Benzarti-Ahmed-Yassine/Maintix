@@ -64,7 +64,7 @@ export const DirectorOverview: React.FC = () => {
         error={error}
         isEmpty={!isLoading && !isError && metrics.totalMachines === 0}
         emptyTitle="No Enterprise Records Found"
-        emptyMessage="No machine or operations data exists in the database. Use Admin to seed demo data."
+        emptyMessage="No machine or operations data exists in the database. Register machines from the Admin panel."
         onRetry={() => refetch()}
       >
         {/* Top 7 Executive KPI Cards Grid */}

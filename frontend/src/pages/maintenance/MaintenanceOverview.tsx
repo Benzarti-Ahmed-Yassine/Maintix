@@ -60,7 +60,7 @@ export const MaintenanceOverview: React.FC = () => {
         error={error}
         isEmpty={!isLoading && !isError && (!riskRanking || riskRanking.length === 0)}
         emptyTitle="No Maintenance Records Found"
-        emptyMessage="No machines or work orders currently exist in the database. Use Admin to seed demo data."
+        emptyMessage="No machines or work orders currently exist in the database. Add machines from the Admin panel."
         onRetry={() => refetch()}
       >
         {/* Top 6 KPI Cards Grid */}

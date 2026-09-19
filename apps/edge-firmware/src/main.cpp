@@ -50,38 +50,38 @@ void loop() {
     FeatureVector features = extractor.extract(vibration_buffer);
 
     String payload = "{";
-    payload += "\"Horodatage\":" + String(millis()) + ",";
-    payload += "\"ID_Machine\":\"" + config.load().machine_id + "\",";
-    payload += "\"Nom_Machine\":\"" + config.load().machine_name + "\",";
-    payload += "\"Mode_Fonctionnement\":\"" + config.load().operating_mode + "\",";
-    payload += "\"Température_Moteur\":" + String(sample.temperature_motor) + ",";
-    payload += "\"Température_Roulement\":" + String(sample.temperature_bearing) + ",";
-    payload += "\"Température_Réducteur\":" + String(sample.temperature_gearbox) + ",";
-    payload += "\"Température_Ambiante\":" + String(sample.temperature_ambient) + ",";
-    payload += "\"Vibration_RMS\":" + String(features.vibration_rms) + ",";
-    payload += "\"Vibration_Crête\":" + String(features.vibration_peak) + ",";
-    payload += "\"Facteur_de_Crête\":" + String(features.crest_factor) + ",";
-    payload += "\"Kurtosis\":" + String(features.kurtosis) + ",";
-    payload += "\"Asymétrie\":" + String(features.skewness) + ",";
-    payload += "\"Fréquence_Dominante\":" + String(features.dominant_frequency) + ",";
-    payload += "\"Tension\":" + String(sample.voltage) + ",";
-    payload += "\"Courant\":" + String(sample.current) + ",";
-    payload += "\"Puissance_Active\":" + String(sample.power_active) + ",";
-    payload += "\"Puissance_Réactive\":" + String(sample.power_reactive) + ",";
-    payload += "\"Puissance_Apparente\":" + String(sample.power_apparent) + ",";
-    payload += "\"Facteur_de_Puissance\":" + String(sample.power_factor) + ",";
-    payload += "\"Vitesse_Rotation\":" + String(sample.rotation_speed) + ",";
-    payload += "\"Couple\":" + String(sample.torque) + ",";
-    payload += "\"Pression_Air\":" + String(sample.air_pressure) + ",";
-    payload += "\"Humidité\":" + String(sample.humidity) + ",";
-    payload += "\"Niveau_Poussière\":" + String(sample.dust_level) + ",";
-    payload += "\"Score_Anomalie\":" + String(features.anomaly_score) + ",";
-    payload += "\"Indice_Santé\":" + String(features.health_index);
+    payload += "\"machineId\":\"" + config.load().machine_id + "\",";
+    payload += "\"timestamp\":" + String(millis()) + ",";
+    payload += "\"vibRMS\":" + String(features.vibration_rms) + ",";
+    payload += "\"vibPeak\":" + String(features.vibration_peak) + ",";
+    payload += "\"vibX\":" + String(sample.vibration_x) + ",";
+    payload += "\"vibY\":" + String(sample.vibration_y) + ",";
+    payload += "\"vibZ\":" + String(sample.vibration_z) + ",";
+    payload += "\"crestFactor\":" + String(features.crest_factor) + ",";
+    payload += "\"kurtosis\":" + String(features.kurtosis) + ",";
+    payload += "\"skewness\":" + String(features.skewness) + ",";
+    payload += "\"domFreq\":" + String(features.dominant_frequency) + ",";
+    payload += "\"tempMotor\":" + String(sample.temperature_motor) + ",";
+    payload += "\"tempBearing\":" + String(sample.temperature_bearing) + ",";
+    payload += "\"tempGearbox\":" + String(sample.temperature_gearbox) + ",";
+    payload += "\"tempAmbient\":" + String(sample.temperature_ambient) + ",";
+    payload += "\"voltage\":" + String(sample.voltage) + ",";
+    payload += "\"current\":" + String(sample.current) + ",";
+    payload += "\"activePower\":" + String(sample.power_active) + ",";
+    payload += "\"speedRpm\":" + String(sample.rotation_speed) + ",";
+    payload += "\"torque\":" + String(sample.torque) + ",";
+    payload += "\"airPressure\":" + String(sample.air_pressure) + ",";
+    payload += "\"humidity\":" + String(sample.humidity) + ",";
+    payload += "\"dustLevel\":" + String(sample.dust_level) + ",";
+    payload += "\"sourceType\":\"REAL_SENSOR\"";
     payload += "}";
 
     if (mqtt_client.connected()) {
       mqtt_client.publish("maintix/telemetry", payload.c_str());
+      String machineTopic = "maintix/machines/" + config.load().machine_id + "/telemetry";
+      mqtt_client.publish(machineTopic.c_str(), payload.c_str());
     }
     last_publish = now;
   }
 }
+

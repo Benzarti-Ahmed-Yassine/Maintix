@@ -40,7 +40,7 @@ class HybridRAGRetriever:
     def _tokenize(self, text: str) -> List[str]:
         return [t.lower() for t in re.findall(r'[A-Za-z0-9_\-\.]+', text) if len(t) > 1]
 
-    def _search_bm25(self, query: str, top_k: int = 10) -> List[Tuple[RAGChunk, float]]:
+    def _search_bm25(self, query: str, top_k: int = 10, category: Optional[str] = None) -> List[Tuple[RAGChunk, float]]:
         q_tokens = self._tokenize(query)
         if not q_tokens or not self.vector_store.chunks:
             return []
@@ -49,6 +49,8 @@ class HybridRAGRetriever:
         scores = []
         for chunk in self.vector_store.chunks:
             if chunk.validation_status != "VALIDATED":
+                continue
+            if category and category != "ALL" and chunk.category != category:
                 continue
             score = 0.0
             tokens = self.chunk_tokens.get(chunk.chunk_id, set())
@@ -75,7 +77,7 @@ class HybridRAGRetriever:
         RRF_Score(d) = 1/(k + rank_bm25(d)) + 1/(k + rank_dense(d))
         """
         # 1. Lexical BM25
-        bm25_results = self._search_bm25(query, top_k=top_k * 2)
+        bm25_results = self._search_bm25(query, top_k=top_k * 2, category=category)
 
         # 2. Dense Vector
         q_emb = self.embedder.embed_query(query)

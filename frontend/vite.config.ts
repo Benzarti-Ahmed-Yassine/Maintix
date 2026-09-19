@@ -16,5 +16,18 @@ export default defineConfig({
         ws: true,
       }
     }
+  },
+  build: {
+    target: 'esnext',
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom', 'zustand', '@tanstack/react-query'],
+          'vendor-charts': ['recharts'],
+          'vendor-icons': ['lucide-react'],
+        }
+      }
+    }
   }
 });

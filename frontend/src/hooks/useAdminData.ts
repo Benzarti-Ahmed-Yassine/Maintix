@@ -131,6 +131,43 @@ export function useCreateDemoMachine() {
   });
 }
 
+export function useAdminProductionLines() {
+  return useQuery({
+    queryKey: ['adminProductionLines'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/api/admin/production-lines');
+      return data;
+    },
+  });
+}
+
+export function useCreateAdminMachine() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (machineData: any) => {
+      const { data } = await apiClient.post('/api/admin/machines', machineData);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['technicianMachines'] });
+      queryClient.invalidateQueries({ queryKey: ['adminProductionLines'] });
+    },
+  });
+}
+
+export function useDeleteAdminMachine() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (machineId: string) => {
+      const { data } = await apiClient.delete(`/api/machines/${machineId}`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['technicianMachines'] });
+    },
+  });
+}
+
 export function useAdminComponents() {
   return useQuery({
     queryKey: ['adminComponents'],
@@ -156,6 +193,19 @@ export function useUpdateRagStatus() {
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { data } = await apiClient.patch(`/api/admin/rag/${id}/status`, { status });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminRagDocuments'] });
+    },
+  });
+}
+
+export function useUploadRagDocument() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { title: string; content: string; category: string; machineType: string }) => {
+      const { data } = await apiClient.post('/api/admin/rag/upload', payload);
       return data;
     },
     onSuccess: () => {

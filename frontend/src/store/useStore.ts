@@ -22,6 +22,10 @@ interface AppState {
   liveConnected: boolean;
   liveTelemetry: Record<string, Telemetry>;
 
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+  setTheme: (theme: 'light' | 'dark') => void;
+
   loginUser: (user: User, token: string) => void;
   logoutUser: () => void;
   setActiveRole: (role: RoleType | null) => void;
@@ -41,6 +45,8 @@ interface AppState {
 const storedToken = localStorage.getItem('maintix_token');
 const storedUser = localStorage.getItem('maintix_user');
 const storedRole = localStorage.getItem('maintix_active_role') as RoleType | null;
+const storedTheme = 'light';
+localStorage.setItem('maintix_theme', 'light');
 
 let initialUser: User | null = null;
 if (storedUser) {
@@ -66,6 +72,22 @@ export const useAppStore = create<AppState>((set) => ({
   refreshCounter: 0,
   lastBroadcastMessage: null,
   liveTelemetry: {},
+  theme: 'light',
+
+  toggleTheme: () =>
+    set(() => {
+      localStorage.setItem('maintix_theme', 'light');
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+      return { theme: 'light' };
+    }),
+
+  setTheme: () => {
+    localStorage.setItem('maintix_theme', 'light');
+    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.add('light');
+    set({ theme: 'light' });
+  },
 
   loginUser: (user, token) => {
     localStorage.setItem('maintix_token', token);

@@ -9,7 +9,8 @@ import { authenticate } from './middleware/auth.js';
 import { login, register, getMe } from './controllers/authController.js';
 
 // Machine Controller
-import { getMachines, getMachineById, createMachine, updateMachine, deleteMachine, getMachineTelemetry } from './controllers/machineController.js';
+import { getMachines, getMachineById, createMachine, updateMachine, deleteMachine, getMachineTelemetry, ingestTelemetry } from './controllers/machineController.js';
+
 
 // Sensor Controller
 import {
@@ -75,7 +76,19 @@ import {
 } from './controllers/directorController.js';
 
 // AI Controller
-import { aiChat, getAiDiagnosis, recordAiFeedback } from './controllers/aiController.js';
+import { aiChat, getAiDiagnosis, recordAiFeedback, executeProductAction } from './controllers/aiController.js';
+
+// ML Inference Controller
+import {
+  getRulPrediction,
+  getAnomalyPrediction,
+  getFailurePrediction,
+  getRiskPrediction,
+  getPolicyRecommendationHandler,
+  getFullMlInference,
+  getMlRagQuery,
+} from './controllers/mlController.js';
+
 
 // Reports & BI Export Controller
 import {
@@ -98,11 +111,6 @@ import {
 
 // Admin Controller
 import {
-  getDemoStatus,
-  triggerDemoScenario,
-  resetDemoData,
-  seedDemoFactory,
-  getDemoScenarios,
   getFactories,
   createFactory,
   createDemoMachine,
@@ -115,6 +123,7 @@ import {
   retrainModel,
   getDriftStatus,
   getChampionChallengerReport,
+
   getAuditLogs,
   getUsers,
   createUser,
@@ -122,8 +131,12 @@ import {
   deleteUser,
 } from './controllers/adminController.js';
 
+import { MqttIngestionService } from './services/mqttService.js';
+import { PrismaClient } from '@prisma/client';
+
 dotenv.config();
 
+const prisma = new PrismaClient();
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 4000;
@@ -131,7 +144,14 @@ const PORT = process.env.PORT || 4000;
 // Initialize WebSocket broadcast engine
 RealtimeService.getInstance().initialize(server);
 
-app.use(cors());
+// Initialize Industrial MQTT Telemetry Ingest Engine
+MqttIngestionService.getInstance().initialize();
+
+const corsOrigin = process.env.CORS_ORIGIN || '*';
+app.use(cors({
+  origin: corsOrigin === '*' ? true : corsOrigin.split(','),
+  credentials: true,
+}));
 app.use(express.json());
 
 // ============================================================================
@@ -155,7 +175,7 @@ app.use('/api', authenticate as any);
 app.get('/api/auth/me', getMe as any);
 
 // ============================================================================
-// Machine Routes
+// Machine & Live Telemetry Ingest Routes (ESP32 / Edge Gateway / REST)
 // ============================================================================
 app.get('/api/machines', getMachines);
 app.get('/api/machines/:id', getMachineById);
@@ -163,6 +183,9 @@ app.post('/api/machines', createMachine);
 app.put('/api/machines/:id', updateMachine);
 app.delete('/api/machines/:id', deleteMachine);
 app.get('/api/machines/:id/telemetry', getMachineTelemetry);
+app.post('/api/machines/:machineId/telemetry', ingestTelemetry);
+app.post('/api/telemetry', ingestTelemetry);
+
 
 // ============================================================================
 // Sensor Domain Routes (Technician & Maintenance Manager)
@@ -233,8 +256,28 @@ app.get('/api/director/alerts', getDirectorAlerts);
 // AI & RAG Routes
 // ============================================================================
 app.post('/api/ai/chat', aiChat);
+app.post('/api/ai/execute-action', executeProductAction);
 app.post('/api/ai/diagnosis', getAiDiagnosis);
 app.post('/api/feedback', recordAiFeedback);
+
+// ============================================================================
+// ML Inference Routes (Industrial AI Engine)
+// ============================================================================
+app.get('/api/ml/machines/:machineId/rul', getRulPrediction);
+app.post('/api/ml/machines/:machineId/rul', getRulPrediction);
+app.get('/api/ml/machines/:machineId/anomaly', getAnomalyPrediction);
+app.post('/api/ml/machines/:machineId/anomaly', getAnomalyPrediction);
+app.get('/api/ml/machines/:machineId/failure', getFailurePrediction);
+app.post('/api/ml/machines/:machineId/failure', getFailurePrediction);
+app.get('/api/ml/machines/:machineId/risk', getRiskPrediction);
+app.post('/api/ml/machines/:machineId/risk', getRiskPrediction);
+app.get('/api/ml/machines/:machineId/policy', getPolicyRecommendationHandler);
+app.post('/api/ml/machines/:machineId/policy', getPolicyRecommendationHandler);
+app.get('/api/ml/machines/:machineId/inference', getFullMlInference);
+app.post('/api/ml/machines/:machineId/inference', getFullMlInference);
+app.post('/api/ml/predict', getFullMlInference);
+app.post('/api/ml/rag/query', getMlRagQuery);
+
 
 // ============================================================================
 // Reports & BI Export Routes
@@ -260,8 +303,8 @@ app.get('/api/admin/opcua', getOpcuaStatus);
 // ============================================================================
 app.get('/api/admin/factories', getFactories);
 app.post('/api/admin/factories', createFactory);
-app.post('/api/admin/machines/demo', createDemoMachine);
 app.post('/api/admin/machines/import', importMachineDatasheet);
+
 app.get('/api/admin/components', getComponents);
 app.post('/api/admin/components', createComponent);
 app.get('/api/admin/rag', getRagDocuments);
@@ -276,16 +319,42 @@ app.post('/api/admin/users', createUser);
 app.put('/api/admin/users/:id', updateUser);
 app.delete('/api/admin/users/:id', deleteUser);
 
-// Demo Control Center
-app.get('/api/admin/demo/status', getDemoStatus);
-app.get('/api/admin/demo/scenarios', getDemoScenarios);
-app.post('/api/admin/demo/scenario', triggerDemoScenario);
-app.post('/api/admin/demo/reset', resetDemoData);
-app.post('/api/admin/demo/seed', seedDemoFactory);
-app.post('/api/admin/demo-scenario', triggerDemoScenario);
+app.get('/api/admin/mqtt/status', (req, res) => {
+  return res.json(MqttIngestionService.getInstance().getStatus());
+});
 
-server.listen(PORT, () => {
+// ============================================================================
+// Server Startup & Graceful Shutdown
+// ============================================================================
+server.listen(PORT, async () => {
   console.log(`🚀 MAINTIX Industrial Decision Intelligence Backend running at http://localhost:${PORT}`);
   console.log(`🔌 WebSocket server active at ws://localhost:${PORT}/ws`);
-  console.log(`📊 Registered complete API suite: Technician | Maintenance | Production | Director | Admin | BI Datasets`);
+  console.log(`📊 Registered complete API suite: Real Telemetry Ingest | Technician | Maintenance | Production | Director | Admin | MLOps`);
+
+  try {
+    const machineCount = await prisma.machine.count();
+    console.log(`🏭 Database Connected: ${machineCount} machines currently registered in plant registry.`);
+  } catch (err: any) {
+    console.warn(`⚠️ Database check notice: ${err.message}`);
+  }
 });
+
+const handleShutdown = async (signal: string) => {
+  console.log(`\n🛑 [Shutdown] Received ${signal}. Gracefully stopping MAINTIX Industrial Backend...`);
+  try {
+    MqttIngestionService.getInstance().shutdown();
+    await prisma.$disconnect();
+    server.close(() => {
+      console.log('✅ [Shutdown] HTTP & WebSocket servers closed.');
+      process.exit(0);
+    });
+  } catch (err: any) {
+    console.error('❌ [Shutdown] Error during graceful shutdown:', err.message);
+    process.exit(1);
+  }
+};
+
+process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+process.on('SIGINT', () => handleShutdown('SIGINT'));
+
+

@@ -9,26 +9,41 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Any, Dict, Optional
 
 import requests
 
 logger = logging.getLogger("maintix.ollama")
 
-
 class OllamaClient:
     """REST Client for local Ollama instance."""
 
-    def __init__(self, base_url: str = "http://localhost:11434", model: str = "llama3.2", timeout: int = 30):
-        self.base_url = base_url.rstrip("/")
-        self.model = model
-        self.timeout = timeout
+    def __init__(self, base_url: Optional[str] = None, model: Optional[str] = None, timeout: Optional[int] = None):
+        self.base_url = (base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")).rstrip("/")
+        self.model = model or os.getenv("OLLAMA_MODEL", "qwen2.5:0.5b")
+        self.timeout = timeout or int(os.getenv("OLLAMA_TIMEOUT", "60"))
 
     def check_health(self) -> bool:
-        """Checks if local Ollama daemon is reachable."""
+        """Checks if local Ollama daemon is reachable and selects available model."""
         try:
             r = requests.get(f"{self.base_url}/api/tags", timeout=3)
-            return r.status_code == 200
+            if r.status_code == 200:
+                data = r.json()
+                models = [m.get("name", "") for m in data.get("models", [])]
+                if models and self.model not in models:
+                    # Prefer local model without :cloud suffix first
+                    local_models = [m for m in models if not m.endswith(":cloud")]
+                    matched = [m for m in models if self.model.split(":")[0] in m]
+                    if matched:
+                        self.model = matched[0]
+                    elif local_models:
+                        self.model = local_models[0]
+                    elif models:
+                        self.model = models[0]
+                    logger.info(f"Ollama selected active model: {self.model}")
+                return True
+            return False
         except Exception:
             return False
 

@@ -166,24 +166,24 @@ export const WorkOrdersPage: React.FC = () => {
 
       {/* Create Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0f172a] border border-slate-700 rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="font-bold text-white text-base flex items-center gap-2">
-                <Wrench size={18} className="text-blue-400" /> New Work Order
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl text-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                <Wrench size={18} className="text-emerald-600" /> Nouvel Ordre de Travail
               </h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-700">
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleCreateOrder} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-300 mb-1 font-semibold">Target Machine</label>
+                <label className="block text-slate-700 mb-1 font-semibold">Machine Cible</label>
                 <select
                   value={formMachine}
                   onChange={(e) => setFormMachine(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white font-mono"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 font-mono focus:border-emerald-500 outline-none"
                 >
                   {machines.length > 0 ? (
                     machines.map((m: any) => (
@@ -198,56 +198,56 @@ export const WorkOrdersPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 mb-1 font-semibold">Intervention Title</label>
+                <label className="block text-slate-700 mb-1 font-semibold">Titre Intervention</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Bearing Replacement & Shaft Alignment"
+                  placeholder="ex: Remplacement Roulement & Alignement Arbre"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 focus:border-emerald-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 mb-1 font-semibold">Priority</label>
+                <label className="block text-slate-700 mb-1 font-semibold">Priorité</label>
                 <select
                   value={formPriority}
                   onChange={(e) => setFormPriority(e.target.value as any)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 focus:border-emerald-500 outline-none"
                 >
-                  <option value="URGENT">URGENT (Critical Anomaly)</option>
-                  <option value="HIGH">HIGH (Preventive Schedule)</option>
-                  <option value="MEDIUM">MEDIUM (Standard Routine)</option>
-                  <option value="LOW">LOW</option>
+                  <option value="URGENT">URGENT (Anomalie Critique)</option>
+                  <option value="HIGH">ÉLEVÉ (Préventif)</option>
+                  <option value="MEDIUM">MOYEN (Routine)</option>
+                  <option value="LOW">FAIBLE</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-slate-300 mb-1 font-semibold">Description / Notes</label>
+                <label className="block text-slate-700 mb-1 font-semibold">Description / Notes</label>
                 <textarea
                   rows={3}
-                  placeholder="Detailed instructions or diagnostics details..."
+                  placeholder="Instructions détaillées ou contexte du diagnostic..."
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 focus:border-emerald-500 outline-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700"
+                  className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium"
                 >
-                  Cancel
+                  Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 disabled:opacity-50"
+                  className="px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-500 disabled:opacity-50 shadow-md shadow-emerald-600/20"
                 >
-                  {createMutation.isPending ? 'Submitting...' : 'Create Order'}
+                  {createMutation.isPending ? 'Enregistrement...' : 'Créer l\'Ordre'}
                 </button>
               </div>
             </form>

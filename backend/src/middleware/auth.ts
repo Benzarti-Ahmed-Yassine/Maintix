@@ -14,13 +14,19 @@ export interface AuthenticatedRequest extends Request {
 
 export function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
+  const isStrictAuth = process.env.STRICT_AUTH === 'true';
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // Demo fallback: default to technician or extract role from query/header for ease of testing
-    const demoRole = (req.headers['x-demo-role'] as string) || 'TECHNICIAN';
+    if (isStrictAuth) {
+      return res.status(401).json({ error: 'Unauthorized: Bearer token is required in strict production mode' });
+    }
+
+    // Demo/Development fallback: default to technician or extract role from header/query
+    const demoRole = (req.headers['x-demo-role'] as string) || (req.query.role as string) || 'TECHNICIAN';
     req.user = {
       id: 'demo-user-id',
       email: `${demoRole.toLowerCase()}@maintix.io`,
-      name: `Demo ${demoRole}`,
+      name: `Maintix ${demoRole}`,
       role: demoRole.toUpperCase(),
     };
     return next();

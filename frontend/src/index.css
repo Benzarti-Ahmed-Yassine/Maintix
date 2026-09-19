@@ -4,59 +4,160 @@
 
 @layer base {
   body {
-    @apply bg-[#0b0f19] text-slate-100 font-sans;
+    @apply bg-[#f8fafc] text-slate-800 font-sans;
   }
 }
 
-/* Custom Industrial SaaS CSS Utilities */
+/* Custom White & Green Industrial Theme */
+:root {
+  --bg-app: #f8fafc;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --accent-green: #10b981;
+  --accent-emerald: #059669;
+}
+
+/* Industrial Cards - Pure White with Subtle Borders & Emerald Hover */
 .industrial-card {
-  background: #111827;
-  border: 1px solid #1f293d;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.875rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  color: #1e293b;
+  transition: all 0.2s ease-in-out;
 }
 
 .industrial-card:hover {
-  border-color: #2b3b5a;
+  border-color: #10b981 !important;
+  box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.12);
+}
+
+/* Emerald & Green Glow Effects */
+.glow-green, .glow-teal {
+  box-shadow: 0 0 22px -2px rgba(16, 185, 129, 0.25);
 }
 
 .glow-blue {
-  box-shadow: 0 0 20px -3px rgba(37, 99, 235, 0.35);
-}
-
-.glow-teal {
-  box-shadow: 0 0 20px -3px rgba(13, 148, 136, 0.35);
+  box-shadow: 0 0 22px -2px rgba(16, 185, 129, 0.2);
 }
 
 .glow-purple {
-  box-shadow: 0 0 20px -3px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 0 22px -2px rgba(16, 185, 129, 0.15);
 }
 
 .glow-gold {
-  box-shadow: 0 0 20px -3px rgba(217, 119, 6, 0.35);
+  box-shadow: 0 0 22px -2px rgba(217, 119, 6, 0.25);
 }
 
 .glow-red {
-  box-shadow: 0 0 20px -3px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 22px -2px rgba(239, 68, 68, 0.25);
 }
 
-/* Custom Scrollbar */
+/* Complete Global Light Theme Overrides - NO DARK MODE */
+.bg-slate-900,
+.bg-slate-900\/95,
+.bg-slate-900\/90,
+.bg-slate-900\/80,
+.bg-slate-900\/60,
+.bg-slate-900\/40,
+.bg-slate-900\/20 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+.bg-slate-950,
+.bg-slate-950\/90,
+.bg-slate-950\/80,
+.bg-slate-950\/60,
+.bg-slate-950\/40,
+.bg-slate-950\/20 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+.bg-\[\#070b14\],
+.bg-\[\#0b0f19\],
+.bg-\[\#0a0e1a\],
+.bg-\[\#0d1322\],
+.bg-\[\#111827\],
+.bg-\[\#0f172a\],
+.bg-\[\#0a0f1d\],
+.bg-slate-800\/60,
+.bg-slate-800\/50 {
+  background-color: #f8fafc !important;
+}
+
+/* Recharts Tooltip Universal Light Theme */
+.recharts-default-tooltip {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08) !important;
+  color: #1e293b !important;
+}
+.recharts-tooltip-label {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+.recharts-tooltip-item {
+  color: #059669 !important;
+}
+
+.border-slate-800,
+.border-slate-800\/80,
+.border-slate-800\/60,
+.border-slate-700,
+.border-slate-700\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Legible Text Colors for Light Theme */
+.text-slate-400 {
+  color: #64748b !important;
+}
+
+.text-slate-300,
+.text-slate-200 {
+  color: #334155 !important;
+}
+
+h1.text-white,
+h2.text-white,
+h3.text-white,
+h4.text-white,
+p.text-white,
+span.text-white:not(button span):not(.bg-emerald-600 span):not(.bg-red-600 span):not(.bg-blue-600 span) {
+  color: #0f172a !important;
+}
+
+/* Solid Buttons Keep White Text */
+button.text-white,
+.bg-emerald-600,
+.bg-emerald-500,
+.bg-green-600,
+.bg-blue-600,
+.bg-red-600,
+.bg-gradient-to-r {
+  color: #ffffff !important;
+}
+
+/* Custom Clean Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0d121f;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #10b981;
 }
 
 /* Live Pulse Animation */
@@ -67,4 +168,14 @@
 
 .pulse-live {
   animation: pulseGlow 2s infinite ease-in-out;
+}
+
+/* Machine Gallery Card Fade-in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s ease both;
 }

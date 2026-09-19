@@ -377,45 +377,45 @@ export const DirectorCsvExportPage: React.FC = () => {
 
       {/* Dataset Preview Modal */}
       {previewDataset && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0f172a] border border-slate-700 rounded-2xl p-6 w-full max-w-4xl max-h-[85vh] shadow-2xl flex flex-col">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-4xl max-h-[85vh] shadow-2xl flex flex-col text-slate-900">
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-950/80 text-emerald-400 rounded-xl border border-emerald-800">
+                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-200">
                   <FileSpreadsheet size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-white">{previewDataset.title}</h3>
-                  <p className="text-xs font-mono text-slate-400">Nom du fichier : {previewDataset.filename}</p>
+                  <h3 className="font-bold text-base text-slate-900">{previewDataset.title}</h3>
+                  <p className="text-xs font-mono text-slate-500">Nom du fichier : {previewDataset.filename}</p>
                 </div>
               </div>
 
               <button
                 onClick={() => setPreviewDataset(null)}
-                className="text-slate-400 hover:text-white p-1 rounded transition"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded transition"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Modal Table Preview */}
-            <div className="flex-1 overflow-auto border border-slate-800 rounded-xl mb-4">
+            <div className="flex-1 overflow-auto border border-slate-200 rounded-xl mb-4 bg-[#f8fafc]">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-950 text-slate-300 font-mono uppercase text-[10px] sticky top-0 border-b border-slate-800">
+                <thead className="bg-slate-100 text-slate-700 font-mono uppercase text-[10px] sticky top-0 border-b border-slate-200">
                   <tr>
                     {previewDataset.columns.map((col, idx) => (
-                      <th key={idx} className="p-3 whitespace-nowrap bg-slate-950">
+                      <th key={idx} className="p-3 whitespace-nowrap bg-slate-100">
                         {col}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800 font-mono">
+                <tbody className="divide-y divide-slate-200 font-mono bg-white">
                   {previewDataset.sampleData.map((row, rIdx) => (
-                    <tr key={rIdx} className="hover:bg-slate-800/40">
+                    <tr key={rIdx} className="hover:bg-slate-50">
                       {row.map((cell, cIdx) => (
-                        <td key={cIdx} className="p-3 text-slate-300 whitespace-nowrap">
+                        <td key={cIdx} className="p-3 text-slate-700 whitespace-nowrap">
                           {cell}
                         </td>
                       ))}
@@ -427,14 +427,14 @@ export const DirectorCsvExportPage: React.FC = () => {
 
             {/* Modal Footer */}
             <div className="flex items-center justify-between pt-2">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Aperçu échantillonné • Le fichier exporté contient l'intégralité des données horodatées
               </p>
 
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setPreviewDataset(null)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
                 >
                   Fermer
                 </button>
@@ -444,7 +444,7 @@ export const DirectorCsvExportPage: React.FC = () => {
                     handleDownload(previewDataset);
                     setPreviewDataset(null);
                   }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition font-mono shadow-lg shadow-emerald-600/30"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition font-mono shadow-md shadow-emerald-600/20"
                 >
                   <Download size={14} />
                   <span>Télécharger ce CSV</span>

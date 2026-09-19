@@ -61,7 +61,7 @@ export const ProductionOverview: React.FC = () => {
         error={error}
         isEmpty={!isLoading && !isError && productionLines.length === 0}
         emptyTitle="No Production Lines Configured"
-        emptyMessage="No production lines currently exist in the database. Use Admin to seed demo data."
+        emptyMessage="No production lines currently exist in the database. Register machines from the Admin panel."
         onRetry={() => refetch()}
       >
         {/* Top 6 KPI Cards Grid */}

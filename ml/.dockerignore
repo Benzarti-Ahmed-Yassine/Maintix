@@ -1,0 +1,17 @@
+__pycache__
+*.py[cod]
+*$py.class
+.pytest_cache
+.mypy_cache
+.venv
+venv
+env
+ENV
+.git
+.gitignore
+.env
+.env.*
+*.log
+mlruns/
+.coverage
+htmlcov/
